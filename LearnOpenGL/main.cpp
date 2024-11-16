@@ -29,7 +29,7 @@ const char *vertexShaderSource =
     "out vec3 outColor; \n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos, 1.0);\n"
+    "   gl_Position = vec4(aPos.x, aPos.y * -1, aPos.z, 1.0);\n"
     "   outColor = aColor; \n"
     "}\0";
 const char *fragmentShaderSource =
