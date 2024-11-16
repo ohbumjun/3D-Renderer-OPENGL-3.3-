@@ -26,10 +26,11 @@ const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
+    "uniform vec3 horizontalOffset;\n"
     "out vec3 outColor; \n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y * -1, aPos.z, 1.0);\n"
+    "   gl_Position = vec4(aPos.x + horizontalOffset.x, aPos.y * -1 + horizontalOffset.y, aPos.z, 1.0);\n"
     "   outColor = aColor; \n"
     "}\0";
 const char *fragmentShaderSource =
@@ -289,7 +290,7 @@ int main()
         // 중요 : shader 내에서 uniform 을 찾는 것은 꼭 shader 를 사용한 이후가
         // 아니어도 된다. 단, 해당 uniform 에 값을 세팅하는 것은 shader 사용 이후
         int vertexColorLocation =
-            glGetUniformLocation(shaderProgram, "ourColor");
+            glGetUniformLocation(shaderProgram, "horizontalOffset");
 
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
@@ -299,12 +300,9 @@ int main()
 
         // 반드시 해당 uniform 에 값을 사용하기 전에
         // shader program 을 사용해야 한다.
-        glUniform4f(
+        glUniform3f(
             vertexColorLocation, 
-            0.0f, 
-            greenValue, 
-            0.0f, 
-            1.0f);
+            0.5f, 0.5f, 0.5f);
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
