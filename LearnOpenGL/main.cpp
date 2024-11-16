@@ -1,6 +1,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
+#include <stb_image.h>
 
 /*
 * >> GLFW ? GLAD ?
@@ -30,8 +31,8 @@ const char *vertexShaderSource =
     "out vec3 outColor; \n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.x + horizontalOffset.x, aPos.y * -1 + horizontalOffset.y, aPos.z, 1.0);\n"
-    "   outColor = aColor; \n"
+    "   gl_Position = vec4(aPos.x + horizontalOffset.x, aPos.y  + horizontalOffset.y, aPos.z, 1.0);\n"
+    "   outColor = vec3(gl_Position.x,gl_Position.y, gl_Position.z); \n"
     "}\0";
 const char *fragmentShaderSource =
     "#version 330 core\n"
@@ -158,8 +159,18 @@ int main()
     }
     #pragma endregion
     
+    #pragma region Vertex
     unsigned int VAO;
     {
+        float texCoords[] = {
+            0.0f,
+            0.0f, // lower-left corner
+            1.0f,
+            0.0f, // lower-right corner
+            0.5f,
+            1.0f // top-center corner
+        };
+
         float vertices[] = {
             // positions        // colors
             0.5f,-0.5f,0.0f,    1.0f,0.0f,0.0f, // bottom right
@@ -274,7 +285,11 @@ int main()
 
         glBindVertexArray(0); // VAO unbind Ω√≈∞±‚
     }   
-    
+    #pragma endregion
+
+    #pragma region Texture
+
+    #pragma endregion
     
     while (!glfwWindowShouldClose(window))
     {
