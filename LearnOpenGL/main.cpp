@@ -25,16 +25,19 @@ void processInput(GLFWwindow *window);
 const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "out vec4 vertexColor; \n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   gl_Position = vec4(aPos, 1.0);\n"
+    "   vertexColor = vec4(0.5, 0.0, 0.0, 1.0); \n"
     "}\0";
 const char *fragmentShaderSource =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 ourColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = ourColor;\n"
     "}\n\0";
 
 int main()
@@ -70,6 +73,15 @@ int main()
     // 콜백함수 등록
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
+
+    // vertex attribute 의 최대 개수
+    // - 보통 vertex shader 의 input 을 얘기할 때
+    // 'vertex attribute' 이라고 한다.
+    int nrAttributes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes
+              << std::endl;
+
     unsigned int shaderProgram;
 
     // shader
@@ -143,13 +155,34 @@ int main()
     
     unsigned int VAO;
     {
-        float vertices[] =
-            {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f};
-
+        float vertices[] = {
+            0.5f,
+            0.5f,
+            0.0f, // top right
+            0.5f,
+            -0.5f,
+            0.0f, // bottom right
+            -0.5f,
+            -0.5f,
+            0.0f, // bottom left
+            -0.5f,
+            0.5f,
+            0.0f // top left
+        };
+        unsigned int indices[] = {
+            // note that we start from 0!
+            0,
+            1,
+            3, // first triangle
+            1,
+            2,
+            3 // second triangle
+        };
         /*
         * VAO
         * - 속성 ~ VBO configure 정보를 한번에 담는 object
         * - 이것만 bind 시키기만 하면 된다.
+        * - 뿐만 아니라, EBO 정보도 같이 가지고 있는다.
         */
 
         glGenVertexArrays(1, &VAO);
@@ -157,6 +190,18 @@ int main()
         // VAO 를 먼저 bind 시킨다.
         // 그 다음에 비로소 vbo, 속성을 configure 한다.
         glBindVertexArray(VAO);
+
+        /*
+        * indexed buffer 를 위한 object :GL_ELEMENT_ARRAY_BUFFER
+        */
+        unsigned int EBO;
+        glGenBuffers(1, &EBO);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     sizeof(indices),
+                     indices,
+                     GL_STATIC_DRAW);
 
         /*
         * VBO 란, vertex data 를 담은 opengl 상의 메모리이다.
@@ -219,12 +264,42 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT); 
 
+        float timeValue = glfwGetTime();
+        float greenValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
+
+        // 못찾을 경우 -1 을 리턴
+        // 중요 : shader 내에서 uniform 을 찾는 것은 꼭 shader 를 사용한 이후가
+        // 아니어도 된다. 단, 해당 uniform 에 값을 세팅하는 것은 shader 사용 이후
+        int vertexColorLocation =
+            glGetUniformLocation(shaderProgram, "ourColor");
+
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
         // 해당 shader program 을 사용하게 된다.
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // 반드시 해당 uniform 에 값을 사용하기 전에
+        // shader program 을 사용해야 한다.
+        glUniform4f(
+            vertexColorLocation, 
+            0.0f, 
+            greenValue, 
+            0.0f, 
+            1.0f);
+
+        // wire frame mode 로 그리기
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : wire frame 해제
+
+        // indexed 형태로 그리는 함수
+        glDrawElements(GL_TRIANGLES,
+            6, // 그리고 싶은 element 의 개수 (6개 정점을 그리고 싶다)
+            GL_UNSIGNED_INT,  // type of indices
+            0 // offset in ebo
+        );
+        // glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering
