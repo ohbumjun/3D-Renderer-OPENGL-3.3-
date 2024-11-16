@@ -27,20 +27,25 @@ const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
+    "layout (location = 2) in vec2 aTexCoord;\n"
     "uniform vec3 horizontalOffset;\n"
     "out vec3 outColor; \n"
+    "out vec2 TexCoord; \n"
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos.x + horizontalOffset.x, aPos.y  + horizontalOffset.y, aPos.z, 1.0);\n"
-    "   outColor = vec3(gl_Position.x,gl_Position.y, gl_Position.z); \n"
+    "   outColor = aColor; \n"
+    "   TexCoord = aTexCoord; \n"
     "}\0";
 const char *fragmentShaderSource =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
     "in vec3 outColor;\n"
+    "in vec2 TexCoord;\n"
+    "uniform sampler2D ourTexture;\n"
     "void main()\n"
     "{\n"
-    "   FragColor =  vec4(outColor, 1.0);\n"
+    "   FragColor = texture(ourTexture, TexCoord);\n"
     "}\n\0";
 
 int main()
@@ -171,22 +176,32 @@ int main()
             1.0f // top-center corner
         };
 
+        // vetex  + color
+        // float vertices[] = {
+        //     // positions        // colors
+        //     0.5f,-0.5f,0.0f,    1.0f,0.0f,0.0f, // bottom right
+        //     -0.5f,
+        //     -0.5f,
+        //     0.0f,
+        //     0.0f,
+        //     1.0f,
+        //     0.0f, // bottom left
+        //     0.0f,
+        //     0.5f,
+        //     0.0f,
+        //     0.0f,
+        //     0.0f,
+        //     1.0f // top
+        // };
+
         float vertices[] = {
-            // positions        // colors
-            0.5f,-0.5f,0.0f,    1.0f,0.0f,0.0f, // bottom right
-            -0.5f,
-            -0.5f,
-            0.0f,
-            0.0f,
-            1.0f,
-            0.0f, // bottom left
-            0.0f,
-            0.5f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f // top
+            // positions // colors // texture coords
+            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
         };
+
 
         unsigned int indices[] = {
             // note that we start from 0!
@@ -262,7 +277,7 @@ int main()
             3,                 // vertex attribute 의 크기
             GL_FLOAT,          // 데이터의 type
             GL_FALSE,          // 정규화 여부
-            6 * sizeof(float), // 각 정점 데이터 사이의 간격
+            8 * sizeof(float), // 각 정점 데이터 사이의 간격
             (void *)0 // 메모리 상에서 data 가 시작하는 offset
         );
 
@@ -275,11 +290,20 @@ int main()
                               3,
                               GL_FLOAT,
                               GL_FALSE,
-                              6 * sizeof(float),
+                              8 * sizeof(float),
             // color 정보는, vertex 정보 다음에 위치하므로 아래와 같은 offset 세팅
                               (void *)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
+        // texture attribute
+        glVertexAttribPointer(2,
+                              2,
+                              GL_FLOAT,
+                              GL_FALSE,
+                              8 * sizeof(float),
+                              (void *)(6 * sizeof(float)));
+
+        glEnableVertexAttribArray(2);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -288,6 +312,48 @@ int main()
     #pragma endregion
 
     #pragma region Texture
+    int width, height, nrChannels;
+    
+    // OPENGL 은 Texture Coord 가 아래->위 방향으로 증가한다고 계산
+    // 하지만 stbl 은 위에서 아래 방향으로 증가한다고 계산
+    // 따라서 그 값들을 뒤집어 줘야 한다.
+    stbi_set_flip_vertically_on_load(1);
+
+    unsigned char *data = stbi_load(RESOURCE_ROOT "SampleImage.jpg",
+                                    &width,
+                                    &height,
+                                    &nrChannels,
+                                    0);
+
+    // index buffer, vertex buffer 처럼 마찬가지로 texture object 를 생성한다.
+    unsigned int texture; // unsigned int 배열이 될 수도 있다. 여러 개의 texture 담을 경우
+    glGenTextures(
+        1, // 만들고자 하는 texture 들의 개수
+        &texture);
+
+    // texture 를 bind 시켜서
+    // 이후의 subsequent texture 관련 작업이 이 texture 에 대해 이루어지게 한다.
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // 이제 실제 texture 메모리를 할당한다.
+    // 해당 함수 까지 호출하면, texture object 에 texture image 가 실제 attach 된 것
+    // 하지만, 여기까지만 하면 texture image 의 base-level 만 존재하는 것
+    glTexImage2D(
+        GL_TEXTURE_2D, // texture target
+                 0, // mipmap level
+                 GL_RGB, // format
+                 width,
+                 height,
+                 0, // 항상 0
+                 GL_RGB, // source image 의 format
+                 GL_UNSIGNED_BYTE,
+                 data);
+
+    // mipmap 을 생성한다.
+    // 현재 bind 된 texture 에 대해 mipmap 을 생성한다.
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
 
     #pragma endregion
     
@@ -312,6 +378,7 @@ int main()
         // 해당 shader program 을 사용하게 된다.
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
+        glBindTexture(GL_TEXTURE_2D, texture);
 
         // 반드시 해당 uniform 에 값을 사용하기 전에
         // shader program 을 사용해야 한다.
@@ -325,12 +392,12 @@ int main()
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : wire frame 해제
 
         // indexed 형태로 그리는 함수
-        // glDrawElements(GL_TRIANGLES,
-        //     6, // 그리고 싶은 element 의 개수 (6개 정점을 그리고 싶다)
-        //     GL_UNSIGNED_INT,  // type of indices
-        //     0 // offset in ebo
-        // );
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES,
+            6, // 그리고 싶은 element 의 개수 (6개 정점을 그리고 싶다)
+            GL_UNSIGNED_INT,  // type of indices
+            0 // offset in ebo
+        );
+        // glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering

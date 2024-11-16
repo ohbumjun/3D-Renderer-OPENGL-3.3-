@@ -3,6 +3,8 @@
 file(GLOB LEARNOPENGL_SOURCES 
 "./*.cpp"
 "./*.h"
+${CMAKE_SOURCE_DIR}/external/stb_image/stb_image.h
+${CMAKE_SOURCE_DIR}/external/stb_image/stb_image.cpp
 )
 # Third Party
 SET(THIRDPARTY_SPDLOG)
@@ -64,7 +66,6 @@ add_executable(
     ${THIRDPARTY_RAPIDJSON}
     ${THIRDPARTY_IMGUIZMO}
     ${THIRDPARTY_BOX2D}
-    # ���⿡ �ٸ� �����鵵 �־���� �ϴ°� ?
 )
 
 target_compile_definitions(
@@ -73,7 +74,7 @@ target_compile_definitions(
     _CRT_SECURE_NO_WARNINGS 
     GLFW_INCLUDE_NONE
     _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
-    # RESOURCE_ROOT="${CMAKE_SOURCE_DIR}/BJResource/"
+    RESOURCE_ROOT="${CMAKE_SOURCE_DIR}/BJResource/"
     # DLL
     HZ_DYNAMIC_LINK
     )
