@@ -1,23 +1,23 @@
-#include <GLFW/glfw3.h>
+ï»¿#include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
 #include <stb_image.h>
 
 /*
 * >> GLFW ? GLAD ?
-penGLÀÇ specificationÀ» OS¿¡ »ó°ü¾øÀÌ 
-½±°Ô implementationÇÏ°Ô µµ¿ÍÁÖ´Â °ÍÀÌ GLFW¿Í GLAD
+penGLì˜ specificationì„ OSì— ìƒê´€ì—†ì´ 
+ì‰½ê²Œ implementationí•˜ê²Œ ë„ì™€ì£¼ëŠ” ê²ƒì´ GLFWì™€ GLAD
 
 >> GLFW ?
-LFW´Â OpenGL ÄÁÅØ½ºÆ®¸¦ »ç¿ëÇÏ¿© Ã¢À» ¸¸µé°í °ü¸® ÇÒ ¼öÀÖ´Â ÀÛÀº C ¶óÀÌºê·¯¸®
+LFWëŠ” OpenGL ì»¨í…ìŠ¤íŠ¸ë¥¼ ì‚¬ìš©í•˜ì—¬ ì°½ì„ ë§Œë“¤ê³  ê´€ë¦¬ í•  ìˆ˜ìˆëŠ” ì‘ì€ C ë¼ì´ë¸ŒëŸ¬ë¦¬
 
 >> GLAD ?
- GLAD´Â Èğ¾îÁø functionÀÇ À§Ä¡¸¦ Ã£¾Æ ÇÔ¼öÆ÷ÀÎÅÍ¸¦ °¡Á®¿Ã ¶§¿¡ 
- µµ¿òÀ» ÁØ´Ù´Â Á¡
+ GLADëŠ” í©ì–´ì§„ functionì˜ ìœ„ì¹˜ë¥¼ ì°¾ì•„ í•¨ìˆ˜í¬ì¸í„°ë¥¼ ê°€ì ¸ì˜¬ ë•Œì— 
+ ë„ì›€ì„ ì¤€ë‹¤ëŠ” ì 
 */
 
 /*
-* window Ã¢ÀÌ resize µÉ ¶§¸¶´Ù È£ÃâµÇ´Â Äİ¹é ÇÔ¼ö
+* window ì°½ì´ resize ë  ë•Œë§ˆë‹¤ í˜¸ì¶œë˜ëŠ” ì½œë°± í•¨ìˆ˜
 */
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
@@ -49,14 +49,15 @@ const char *fragmentShaderSource =
     // mix : linear interpolation between two values based on 3rd value
     // ex) 0.2 : 80% of texture1, 20% of texture2
     // "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), 0.3);\n "
-    "   vec2 reversedTexCoords = vec2(1.0 - TexCoord.x, TexCoord.y);\n "
-    "   FragColor = texture(texture1, reversedTexCoords);\n "
+    // "   vec2 reversedTexCoords = vec2(1.0 - TexCoord.x, TexCoord.y);\n "
+    // "   FragColor = texture(texture1, reversedTexCoords);\n "
+    "   FragColor = texture(texture2, TexCoord);\n " // 4x repetition
     "}\n\0";
 
 int main()
 {
-    #pragma region OpenGL ÃÊ±âÈ­
-    // GLFW ÃÊ±âÈ­
+    #pragma region OpenGL ì´ˆê¸°í™”
+    // GLFW ì´ˆê¸°í™”
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -71,7 +72,7 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
-    // GLAD ÃÊ±âÈ­
+    // GLAD ì´ˆê¸°í™”
     // GLAD manages function pointers for OpenGL
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -84,13 +85,13 @@ int main()
     // 800, 600 : width, height
     glViewport(0, 0 , 800, 600);
 
-    // Äİ¹éÇÔ¼ö µî·Ï
+    // ì½œë°±í•¨ìˆ˜ ë“±ë¡
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
 
-    // vertex attribute ÀÇ ÃÖ´ë °³¼ö
-    // - º¸Åë vertex shader ÀÇ input À» ¾ê±âÇÒ ¶§
-    // 'vertex attribute' ÀÌ¶ó°í ÇÑ´Ù.
+    // vertex attribute ì˜ ìµœëŒ€ ê°œìˆ˜
+    // - ë³´í†µ vertex shader ì˜ input ì„ ì–˜ê¸°í•  ë•Œ
+    // 'vertex attribute' ì´ë¼ê³  í•œë‹¤.
     int nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes
@@ -111,20 +112,20 @@ int main()
     // shader
     #pragma region Shader
     {
-        // shader object ¸¦ »ı¼ºÇÑ´Ù.
+        // shader object ë¥¼ ìƒì„±í•œë‹¤.
         unsigned int vertexShader;
 
-        // ÀÎÀÚ : ¾î¶² type ÀÇ shader ¸¦ ¸¸µé°íÀÚ ÇÏ´ÂÁö
+        // ì¸ì : ì–´ë–¤ type ì˜ shader ë¥¼ ë§Œë“¤ê³ ì í•˜ëŠ”ì§€
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-        // shader source code ¸¦ ¿ì¸®°¡ ¸¸µé¾î³½ shader object ¿¡ ºÙ¿©ÁØ´Ù.
-        // ±×·¯¸é º¹»çº»ÀÌ ³Ñ¾î°£´Ù.
+        // shader source code ë¥¼ ìš°ë¦¬ê°€ ë§Œë“¤ì–´ë‚¸ shader object ì— ë¶™ì—¬ì¤€ë‹¤.
+        // ê·¸ëŸ¬ë©´ ë³µì‚¬ë³¸ì´ ë„˜ì–´ê°„ë‹¤.
         glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 
-        // shder object ¸¦ ÄÄÆÄÀÏÇÑ´Ù.
+        // shder object ë¥¼ ì»´íŒŒì¼í•œë‹¤.
         glCompileShader(vertexShader);
 
-        // Shader Compile ÀÌ ¼º°øÀûÀ¸·Î ÀÌ·ç¾îÁ³´ÂÁö È®ÀÎÇÑ´Ù.
+        // Shader Compile ì´ ì„±ê³µì ìœ¼ë¡œ ì´ë£¨ì–´ì¡ŒëŠ”ì§€ í™•ì¸í•œë‹¤.
         int success;
         char infoLog[512];
         glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -156,14 +157,14 @@ int main()
         
         shaderProgram = glCreateProgram();
 
-        // shader program ¿¡ vertex shader ¿Í fragment shader ¸¦ ºÙÀÎ´Ù.
+        // shader program ì— vertex shader ì™€ fragment shader ë¥¼ ë¶™ì¸ë‹¤.
         glAttachShader(shaderProgram, vertexShader);
         glAttachShader(shaderProgram, fragmentShader);
 
-        // shader program À» link ÇÑ´Ù.
+        // shader program ì„ link í•œë‹¤.
         glLinkProgram(shaderProgram);
 
-        // Link ¼º°ø ¿©ºÎ ÆÇ´ÜÇÏ±â
+        // Link ì„±ê³µ ì—¬ë¶€ íŒë‹¨í•˜ê¸°
         glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
         if (!success)
         {
@@ -209,10 +210,10 @@ int main()
 
         float vertices[] = {
             // positions // colors // texture coords
-            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f, // top right
+            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // bottom right
             -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f  // top left
         };
 
 
@@ -227,19 +228,19 @@ int main()
         };
         /*
         * VAO
-        * - ¼Ó¼º ~ VBO configure Á¤º¸¸¦ ÇÑ¹ø¿¡ ´ã´Â object
-        * - ÀÌ°Í¸¸ bind ½ÃÅ°±â¸¸ ÇÏ¸é µÈ´Ù.
-        * - »Ó¸¸ ¾Æ´Ï¶ó, EBO Á¤º¸µµ °°ÀÌ °¡Áö°í ÀÖ´Â´Ù.
+        * - ì†ì„± ~ VBO configure ì •ë³´ë¥¼ í•œë²ˆì— ë‹´ëŠ” object
+        * - ì´ê²ƒë§Œ bind ì‹œí‚¤ê¸°ë§Œ í•˜ë©´ ëœë‹¤.
+        * - ë¿ë§Œ ì•„ë‹ˆë¼, EBO ì •ë³´ë„ ê°™ì´ ê°€ì§€ê³  ìˆëŠ”ë‹¤.
         */
 
         glGenVertexArrays(1, &VAO);
 
-        // VAO ¸¦ ¸ÕÀú bind ½ÃÅ²´Ù.
-        // ±× ´ÙÀ½¿¡ ºñ·Î¼Ò vbo, ¼Ó¼ºÀ» configure ÇÑ´Ù.
+        // VAO ë¥¼ ë¨¼ì € bind ì‹œí‚¨ë‹¤.
+        // ê·¸ ë‹¤ìŒì— ë¹„ë¡œì†Œ vbo, ì†ì„±ì„ configure í•œë‹¤.
         glBindVertexArray(VAO);
 
         /*
-        * indexed buffer ¸¦ À§ÇÑ object :GL_ELEMENT_ARRAY_BUFFER
+        * indexed buffer ë¥¼ ìœ„í•œ object :GL_ELEMENT_ARRAY_BUFFER
         */
         unsigned int EBO;
         glGenBuffers(1, &EBO);
@@ -251,51 +252,51 @@ int main()
                      GL_STATIC_DRAW);
 
         /*
-        * VBO ¶õ, vertex data ¸¦ ´ãÀº opengl »óÀÇ ¸Ş¸ğ¸®ÀÌ´Ù.
+        * VBO ë€, vertex data ë¥¼ ë‹´ì€ opengl ìƒì˜ ë©”ëª¨ë¦¬ì´ë‹¤.
         */
         unsigned int VBO;
         glGenBuffers(1, &VBO);
 
-        // Opengl Àº ¿©·¯ type ÀÇ buffer object ¸¦ °¡Áö°í ÀÖ´Ù.
-        // ±×¸®°í 'vetex buffer object' ÀÇ type ÀÌ GL_ARRAY_BUFFER ÀÌ´Ù.
-        // opengl Àº, ¼­·Î ´Ù¸¥ typeÀÇ ¿©·¯ °³ buffer ¸¦ bind ÇÒ ¼ö ÀÖ°Ô ÇØÁØ´Ù.
+        // Opengl ì€ ì—¬ëŸ¬ type ì˜ buffer object ë¥¼ ê°€ì§€ê³  ìˆë‹¤.
+        // ê·¸ë¦¬ê³  'vetex buffer object' ì˜ type ì´ GL_ARRAY_BUFFER ì´ë‹¤.
+        // opengl ì€, ì„œë¡œ ë‹¤ë¥¸ typeì˜ ì—¬ëŸ¬ ê°œ buffer ë¥¼ bind í•  ìˆ˜ ìˆê²Œ í•´ì¤€ë‹¤.
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        // ÇØ´ç VBO ¸Ş¸ğ¸® °ø°£¿¡, ÇöÀç vertices ÀÇ µ¥ÀÌÅÍ¸¦ º¹»çÇÑ´Ù.
+        // í•´ë‹¹ VBO ë©”ëª¨ë¦¬ ê³µê°„ì—, í˜„ì¬ vertices ì˜ ë°ì´í„°ë¥¼ ë³µì‚¬í•œë‹¤.
         glBufferData(GL_ARRAY_BUFFER,
                      sizeof(vertices),
                      vertices,
 
                      /*
-        * ±×·¡ÇÈ Ä«µå°¡ ¿ì¸®°¡ Á¦°øÇÑ µ¥ÀÌÅÍ¸¦ ¾î¶²½ÄÀ¸·Î ´Ù·êÁö¸¦ °áÁ¤ÇÑ´Ù.
+        * ê·¸ë˜í”½ ì¹´ë“œê°€ ìš°ë¦¬ê°€ ì œê³µí•œ ë°ì´í„°ë¥¼ ì–´ë–¤ì‹ìœ¼ë¡œ ë‹¤ë£°ì§€ë¥¼ ê²°ì •í•œë‹¤.
         * 
-        * > GL_STATIC_DRAW : data ´Â ÇÑ¹ø set, ¿©·¯ ¹ø »ç¿ëµÊ
-        * > GL_DYNAMIC_DRAW : data ´Â ¿©·¯ ¹ø set, ¿©·¯ ¹ø »ç¿ëµÊ
-        * > GL_STREAM_DRAW : data ´Â ÇÑ¹ø set, Á¤¸» Àû°Ô »ç¿ëµÊ
+        * > GL_STATIC_DRAW : data ëŠ” í•œë²ˆ set, ì—¬ëŸ¬ ë²ˆ ì‚¬ìš©ë¨
+        * > GL_DYNAMIC_DRAW : data ëŠ” ì—¬ëŸ¬ ë²ˆ set, ì—¬ëŸ¬ ë²ˆ ì‚¬ìš©ë¨
+        * > GL_STREAM_DRAW : data ëŠ” í•œë²ˆ set, ì •ë§ ì ê²Œ ì‚¬ìš©ë¨
         * 
-        * ¿ì¸®°¡ ÇöÀç ³Ñ°ÜÁÖ´Â Á¤Á¡ Á¤º¸´Â , º¯ÇÏÁö ¾Ê°í, ¿©·¯¹ø »ç¿ëµÈ´Ù.
-        * ¸¸¾à ÀÚÁÖ º¯ÇÏ´Â Á¤º¸¶ó¸é GL_DYNAMIC_DRAW À» »ç¿ëÇÏ¿©
-        * Opengl ÀÌ ºü¸£°Ô ¾µ ¼ö ÀÖ´Â ¸Ş¸ğ¸® °ø°£À¸·Î µ¥ÀÌÅÍ¸¦ À§Ä¡½ÃÅ³ ¼ö ÀÖ°Ô 
-        * ÇØ¾ß ÇÑ´Ù.
+        * ìš°ë¦¬ê°€ í˜„ì¬ ë„˜ê²¨ì£¼ëŠ” ì •ì  ì •ë³´ëŠ” , ë³€í•˜ì§€ ì•Šê³ , ì—¬ëŸ¬ë²ˆ ì‚¬ìš©ëœë‹¤.
+        * ë§Œì•½ ìì£¼ ë³€í•˜ëŠ” ì •ë³´ë¼ë©´ GL_DYNAMIC_DRAW ì„ ì‚¬ìš©í•˜ì—¬
+        * Opengl ì´ ë¹ ë¥´ê²Œ ì“¸ ìˆ˜ ìˆëŠ” ë©”ëª¨ë¦¬ ê³µê°„ìœ¼ë¡œ ë°ì´í„°ë¥¼ ìœ„ì¹˜ì‹œí‚¬ ìˆ˜ ìˆê²Œ 
+        * í•´ì•¼ í•œë‹¤.
         */
                      GL_STATIC_DRAW);
 
-        // shader À» ÁØºñÇÏ´Â °Í¸¸À¸·Î´Â ºÎÁ·ÇÏ´Ù
-        // vertex shader ´Â, ¾ÆÁ÷ ¸Ş¸ğ¸® »óÀÇ vertex data ¸¦
-        // ¾î¶»°Ô ÇØ¼®ÇØ¾ß ÇÒÁö ¸ğ¸¥´Ù. µû¶ó¼­ vertex attribute À»
-        // ÅëÇØ¼­ ÀÌ¸¦ ¾Ë·ÁÁÖ¾î¾ß ÇÑ´Ù.
+        // shader ì„ ì¤€ë¹„í•˜ëŠ” ê²ƒë§Œìœ¼ë¡œëŠ” ë¶€ì¡±í•˜ë‹¤
+        // vertex shader ëŠ”, ì•„ì§ ë©”ëª¨ë¦¬ ìƒì˜ vertex data ë¥¼
+        // ì–´ë–»ê²Œ í•´ì„í•´ì•¼ í• ì§€ ëª¨ë¥¸ë‹¤. ë”°ë¼ì„œ vertex attribute ì„
+        // í†µí•´ì„œ ì´ë¥¼ ì•Œë ¤ì£¼ì–´ì•¼ í•œë‹¤.
         glVertexAttribPointer(
-            0, // ¾î¶² vertex attribute À» configure ÇÏ´Â °ÍÀÎ°¡
+            0, // ì–´ë–¤ vertex attribute ì„ configure í•˜ëŠ” ê²ƒì¸ê°€
             // ex) layout(location = 0) in vec3 aPos;
-            3,                 // vertex attribute ÀÇ Å©±â
-            GL_FLOAT,          // µ¥ÀÌÅÍÀÇ type
-            GL_FALSE,          // Á¤±ÔÈ­ ¿©ºÎ
-            8 * sizeof(float), // °¢ Á¤Á¡ µ¥ÀÌÅÍ »çÀÌÀÇ °£°İ
-            (void *)0 // ¸Ş¸ğ¸® »ó¿¡¼­ data °¡ ½ÃÀÛÇÏ´Â offset
+            3,                 // vertex attribute ì˜ í¬ê¸°
+            GL_FLOAT,          // ë°ì´í„°ì˜ type
+            GL_FALSE,          // ì •ê·œí™” ì—¬ë¶€
+            8 * sizeof(float), // ê° ì •ì  ë°ì´í„° ì‚¬ì´ì˜ ê°„ê²©
+            (void *)0 // ë©”ëª¨ë¦¬ ìƒì—ì„œ data ê°€ ì‹œì‘í•˜ëŠ” offset
         );
 
-        // ÇØ´ç ¼Ó¼ºÀ» enable ½ÃÄÑ¾ß ÇÑ´Ù.
-        // vertex ¼Ó¼ºµéÀº, ±âº»ÀûÀ¸·Î disable µÇ¾î ÀÖ´Ù.
+        // í•´ë‹¹ ì†ì„±ì„ enable ì‹œì¼œì•¼ í•œë‹¤.
+        // vertex ì†ì„±ë“¤ì€, ê¸°ë³¸ì ìœ¼ë¡œ disable ë˜ì–´ ìˆë‹¤.
         glEnableVertexAttribArray(0);
 
         // color attribute
@@ -304,7 +305,7 @@ int main()
                               GL_FLOAT,
                               GL_FALSE,
                               8 * sizeof(float),
-            // color Á¤º¸´Â, vertex Á¤º¸ ´ÙÀ½¿¡ À§Ä¡ÇÏ¹Ç·Î ¾Æ·¡¿Í °°Àº offset ¼¼ÆÃ
+            // color ì •ë³´ëŠ”, vertex ì •ë³´ ë‹¤ìŒì— ìœ„ì¹˜í•˜ë¯€ë¡œ ì•„ë˜ì™€ ê°™ì€ offset ì„¸íŒ…
                               (void *)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
@@ -320,16 +321,16 @@ int main()
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glBindVertexArray(0); // VAO unbind ½ÃÅ°±â
+        glBindVertexArray(0); // VAO unbind ì‹œí‚¤ê¸°
     }   
     #pragma endregion
 
     #pragma region Texture
     int width, height, nrChannels;
     
-    // OPENGL Àº Texture Coord °¡ ¾Æ·¡->À§ ¹æÇâÀ¸·Î Áõ°¡ÇÑ´Ù°í °è»ê
-    // ÇÏÁö¸¸ stbl Àº À§¿¡¼­ ¾Æ·¡ ¹æÇâÀ¸·Î Áõ°¡ÇÑ´Ù°í °è»ê
-    // µû¶ó¼­ ±× °ªµéÀ» µÚÁı¾î Áà¾ß ÇÑ´Ù.
+    // OPENGL ì€ Texture Coord ê°€ ì•„ë˜->ìœ„ ë°©í–¥ìœ¼ë¡œ ì¦ê°€í•œë‹¤ê³  ê³„ì‚°
+    // í•˜ì§€ë§Œ stbl ì€ ìœ„ì—ì„œ ì•„ë˜ ë°©í–¥ìœ¼ë¡œ ì¦ê°€í•œë‹¤ê³  ê³„ì‚°
+    // ë”°ë¼ì„œ ê·¸ ê°’ë“¤ì„ ë’¤ì§‘ì–´ ì¤˜ì•¼ í•œë‹¤.
     stbi_set_flip_vertically_on_load(1);
 
     unsigned char *data = stbi_load(RESOURCE_ROOT "SampleImage.jpg",
@@ -338,32 +339,40 @@ int main()
                                     &nrChannels,
                                     0);
 
-    // index buffer, vertex buffer Ã³·³ ¸¶Âù°¡Áö·Î texture object ¸¦ »ı¼ºÇÑ´Ù.
-    unsigned int texture1; // unsigned int ¹è¿­ÀÌ µÉ ¼öµµ ÀÖ´Ù. ¿©·¯ °³ÀÇ texture ´ãÀ» °æ¿ì
+    // index buffer, vertex buffer ì²˜ëŸ¼ ë§ˆì°¬ê°€ì§€ë¡œ texture object ë¥¼ ìƒì„±í•œë‹¤.
+    unsigned int texture1; // unsigned int ë°°ì—´ì´ ë  ìˆ˜ë„ ìˆë‹¤. ì—¬ëŸ¬ ê°œì˜ texture ë‹´ì„ ê²½ìš°
     glGenTextures(
-        1, // ¸¸µé°íÀÚ ÇÏ´Â texture µéÀÇ °³¼ö
+        1, // ë§Œë“¤ê³ ì í•˜ëŠ” texture ë“¤ì˜ ê°œìˆ˜
         &texture1);
 
-    // texture ¸¦ bind ½ÃÄÑ¼­
-    // ÀÌÈÄÀÇ subsequent texture °ü·Ã ÀÛ¾÷ÀÌ ÀÌ texture ¿¡ ´ëÇØ ÀÌ·ç¾îÁö°Ô ÇÑ´Ù.
+    // texture ë¥¼ bind ì‹œì¼œì„œ
+    // ì´í›„ì˜ subsequent texture ê´€ë ¨ ì‘ì—…ì´ ì´ texture ì— ëŒ€í•´ ì´ë£¨ì–´ì§€ê²Œ í•œë‹¤.
     glBindTexture(GL_TEXTURE_2D, texture1);
 
-    // ÀÌÁ¦ ½ÇÁ¦ texture ¸Ş¸ğ¸®¸¦ ÇÒ´çÇÑ´Ù.
-    // ÇØ´ç ÇÔ¼ö ±îÁö È£ÃâÇÏ¸é, texture object ¿¡ texture image °¡ ½ÇÁ¦ attach µÈ °Í
-    // ÇÏÁö¸¸, ¿©±â±îÁö¸¸ ÇÏ¸é texture image ÀÇ base-level ¸¸ Á¸ÀçÇÏ´Â °Í
+    // ì´ì œ ì‹¤ì œ texture ë©”ëª¨ë¦¬ë¥¼ í• ë‹¹í•œë‹¤.
+    // í•´ë‹¹ í•¨ìˆ˜ ê¹Œì§€ í˜¸ì¶œí•˜ë©´, texture object ì— texture image ê°€ ì‹¤ì œ attach ëœ ê²ƒ
+    // í•˜ì§€ë§Œ, ì—¬ê¸°ê¹Œì§€ë§Œ í•˜ë©´ texture image ì˜ base-level ë§Œ ì¡´ì¬í•˜ëŠ” ê²ƒ
     glTexImage2D(
         GL_TEXTURE_2D, // texture target
                  0, // mipmap level
                  GL_RGB, // format
                  width,
                  height,
-                 0, // Ç×»ó 0
-                 GL_RGB, // source image ÀÇ format
+                 0, // í•­ìƒ 0
+                 GL_RGB, // source image ì˜ format
                  GL_UNSIGNED_BYTE,
                  data);
 
-    // mipmap À» »ı¼ºÇÑ´Ù.
-    // ÇöÀç bind µÈ texture ¿¡ ´ëÇØ mipmap À» »ı¼ºÇÑ´Ù.
+    // Set texture wrapping mode to GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // mipmap ì„ ìƒì„±í•œë‹¤.
+    // í˜„ì¬ bind ëœ texture ì— ëŒ€í•´ mipmap ì„ ìƒì„±í•œë‹¤.
     glGenerateMipmap(GL_TEXTURE_2D);
 
     unsigned char *data2 = stbi_load(RESOURCE_ROOT "curious.png",
@@ -372,31 +381,31 @@ int main()
                                     &nrChannels,
                                     0);
 
-    // index buffer, vertex buffer Ã³·³ ¸¶Âù°¡Áö·Î texture object ¸¦ »ı¼ºÇÑ´Ù.
+    // index buffer, vertex buffer ì²˜ëŸ¼ ë§ˆì°¬ê°€ì§€ë¡œ texture object ë¥¼ ìƒì„±í•œë‹¤.
     unsigned int
-        texture2; // unsigned int ¹è¿­ÀÌ µÉ ¼öµµ ÀÖ´Ù. ¿©·¯ °³ÀÇ texture ´ãÀ» °æ¿ì
-    glGenTextures(1, // ¸¸µé°íÀÚ ÇÏ´Â texture µéÀÇ °³¼ö
+        texture2; // unsigned int ë°°ì—´ì´ ë  ìˆ˜ë„ ìˆë‹¤. ì—¬ëŸ¬ ê°œì˜ texture ë‹´ì„ ê²½ìš°
+    glGenTextures(1, // ë§Œë“¤ê³ ì í•˜ëŠ” texture ë“¤ì˜ ê°œìˆ˜
                   &texture2);
 
-    // texture ¸¦ bind ½ÃÄÑ¼­
-    // ÀÌÈÄÀÇ subsequent texture °ü·Ã ÀÛ¾÷ÀÌ ÀÌ texture ¿¡ ´ëÇØ ÀÌ·ç¾îÁö°Ô ÇÑ´Ù.
+    // texture ë¥¼ bind ì‹œì¼œì„œ
+    // ì´í›„ì˜ subsequent texture ê´€ë ¨ ì‘ì—…ì´ ì´ texture ì— ëŒ€í•´ ì´ë£¨ì–´ì§€ê²Œ í•œë‹¤.
     glBindTexture(GL_TEXTURE_2D, texture2);
 
-    // ÀÌÁ¦ ½ÇÁ¦ texture ¸Ş¸ğ¸®¸¦ ÇÒ´çÇÑ´Ù.
-    // ÇØ´ç ÇÔ¼ö ±îÁö È£ÃâÇÏ¸é, texture object ¿¡ texture image °¡ ½ÇÁ¦ attach µÈ °Í
-    // ÇÏÁö¸¸, ¿©±â±îÁö¸¸ ÇÏ¸é texture image ÀÇ base-level ¸¸ Á¸ÀçÇÏ´Â °Í
+    // ì´ì œ ì‹¤ì œ texture ë©”ëª¨ë¦¬ë¥¼ í• ë‹¹í•œë‹¤.
+    // í•´ë‹¹ í•¨ìˆ˜ ê¹Œì§€ í˜¸ì¶œí•˜ë©´, texture object ì— texture image ê°€ ì‹¤ì œ attach ëœ ê²ƒ
+    // í•˜ì§€ë§Œ, ì—¬ê¸°ê¹Œì§€ë§Œ í•˜ë©´ texture image ì˜ base-level ë§Œ ì¡´ì¬í•˜ëŠ” ê²ƒ
     glTexImage2D(GL_TEXTURE_2D, // texture target
                  0,             // mipmap level
                  GL_RGB,        // format
                  width,
                  height,
-                 0,      // Ç×»ó 0
-                 GL_RGBA, // source image ÀÇ format -> png Àº alpha channel ÀÌ ÀÖÀ¸¹Ç·Î
+                 0,      // í•­ìƒ 0
+                 GL_RGBA, // source image ì˜ format -> png ì€ alpha channel ì´ ìˆìœ¼ë¯€ë¡œ
                  GL_UNSIGNED_BYTE,
                  data2);
 
-    // mipmap À» »ı¼ºÇÑ´Ù.
-    // ÇöÀç bind µÈ texture ¿¡ ´ëÇØ mipmap À» »ı¼ºÇÑ´Ù.
+    // mipmap ì„ ìƒì„±í•œë‹¤.
+    // í˜„ì¬ bind ëœ texture ì— ëŒ€í•´ mipmap ì„ ìƒì„±í•œë‹¤.
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(data);
@@ -405,9 +414,9 @@ int main()
 
     #pragma region Texture Unit
 
-    glUseProgram(shaderProgram); // don¡¯t forget to activate the shader first!
+    glUseProgram(shaderProgram); // donâ€™t forget to activate the shader first!
 
-    // uniform sampler2D texture1 ¿¡ ¼¼ÆÃ
+    // uniform sampler2D texture1 ì— ì„¸íŒ…
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
    //  shader.setInt("texture2", 1); // or with shader class
     glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
@@ -424,18 +433,18 @@ int main()
         float timeValue = glfwGetTime();
         float greenValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
 
-        // ¸øÃ£À» °æ¿ì -1 À» ¸®ÅÏ
-        // Áß¿ä : shader ³»¿¡¼­ uniform À» Ã£´Â °ÍÀº ²À shader ¸¦ »ç¿ëÇÑ ÀÌÈÄ°¡
-        // ¾Æ´Ï¾îµµ µÈ´Ù. ´Ü, ÇØ´ç uniform ¿¡ °ªÀ» ¼¼ÆÃÇÏ´Â °ÍÀº shader »ç¿ë ÀÌÈÄ
+        // ëª»ì°¾ì„ ê²½ìš° -1 ì„ ë¦¬í„´
+        // ì¤‘ìš” : shader ë‚´ì—ì„œ uniform ì„ ì°¾ëŠ” ê²ƒì€ ê¼­ shader ë¥¼ ì‚¬ìš©í•œ ì´í›„ê°€
+        // ì•„ë‹ˆì–´ë„ ëœë‹¤. ë‹¨, í•´ë‹¹ uniform ì— ê°’ì„ ì„¸íŒ…í•˜ëŠ” ê²ƒì€ shader ì‚¬ìš© ì´í›„
         int horizontalOffsetLocation =
             glGetUniformLocation(shaderProgram, "horizontalOffset");
 
-        // shader program À» »ç¿ëÇÑ´Ù.
-        // ÇØ´ç ÇÔ¼ö È£Ãâ ÀÌÈÄ, ¸ğµç shader ¿Í rendering call Àº
-        // ÇØ´ç shader program À» »ç¿ëÇÏ°Ô µÈ´Ù.
+        // shader program ì„ ì‚¬ìš©í•œë‹¤.
+        // í•´ë‹¹ í•¨ìˆ˜ í˜¸ì¶œ ì´í›„, ëª¨ë“  shader ì™€ rendering call ì€
+        // í•´ë‹¹ shader program ì„ ì‚¬ìš©í•˜ê²Œ ëœë‹¤.
         glUseProgram(shaderProgram);
 
-        // ¸¶Âù°¡Áö·Î, ¾Æ·¡ texture ÇÔ¼öµéµµ shader program »ç¿ë ÀÌÈÄ¿¡ È£ÃâµÇ¾î¾ß ÇÑ´Ù.
+        // ë§ˆì°¬ê°€ì§€ë¡œ, ì•„ë˜ texture í•¨ìˆ˜ë“¤ë„ shader program ì‚¬ìš© ì´í›„ì— í˜¸ì¶œë˜ì–´ì•¼ í•œë‹¤.
         glActiveTexture(GL_TEXTURE0);  // activate texture unit first
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
@@ -443,20 +452,20 @@ int main()
 
         glBindVertexArray(VAO);
 
-        // ¹İµå½Ã ÇØ´ç uniform ¿¡ °ªÀ» »ç¿ëÇÏ±â Àü¿¡
-        // shader program À» »ç¿ëÇØ¾ß ÇÑ´Ù.
+        // ë°˜ë“œì‹œ í•´ë‹¹ uniform ì— ê°’ì„ ì‚¬ìš©í•˜ê¸° ì „ì—
+        // shader program ì„ ì‚¬ìš©í•´ì•¼ í•œë‹¤.
         glUniform3f(horizontalOffsetLocation, 
             0.5f, 0.5f, 0.5f
         );
 
-        // wire frame mode ·Î ±×¸®±â
+        // wire frame mode ë¡œ ê·¸ë¦¬ê¸°
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : wire frame ÇØÁ¦
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : wire frame í•´ì œ
 
-        // indexed ÇüÅÂ·Î ±×¸®´Â ÇÔ¼ö
+        // indexed í˜•íƒœë¡œ ê·¸ë¦¬ëŠ” í•¨ìˆ˜
         glDrawElements(GL_TRIANGLES,
-            6, // ±×¸®°í ½ÍÀº element ÀÇ °³¼ö (6°³ Á¤Á¡À» ±×¸®°í ½Í´Ù)
+            6, // ê·¸ë¦¬ê³  ì‹¶ì€ element ì˜ ê°œìˆ˜ (6ê°œ ì •ì ì„ ê·¸ë¦¬ê³  ì‹¶ë‹¤)
             GL_UNSIGNED_INT,  // type of indices
             0 // offset in ebo
         );
@@ -464,10 +473,10 @@ int main()
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering
-        glfwPollEvents(); // event °¡ ¹ß»ıÇß´ÂÁö °è¼ÓÇØ¼­ °Ë»ç
+        glfwPollEvents(); // event ê°€ ë°œìƒí–ˆëŠ”ì§€ ê³„ì†í•´ì„œ ê²€ì‚¬
     }
 
-    glfwTerminate(); // ¸ğµç glfw ÀÚ¿ø Áö¿î´Ù.
+    glfwTerminate(); // ëª¨ë“  glfw ìì› ì§€ìš´ë‹¤.
 
     return 0;
 }

@@ -13,6 +13,12 @@ texture coord 은 0 ~ 1 사이이다
 • GL_CLAMP_TO_EDGE:
 	Clamps the coordinates between 0 and 1. The result is that higher
 	coordinates become clamped to the edge, resulting in a stretched edge pattern.
+
+    즉, 0 과 1 사이의 좌표를 고정한다. 결과적으로 큰 좌표가 가장 자리에 고정되어
+    가장 자리의 패턴이 계속 늘어난다.
+
+    즉, 1보다 큰 tex coor 값들도 계속 1로 만들어내는 것으로 보인다.
+
 • GL_CLAMP_TO_BORDER: 
 	Coordinates outside the range are now given a user-specified
 	border color.
