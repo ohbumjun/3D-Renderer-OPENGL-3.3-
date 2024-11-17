@@ -48,7 +48,9 @@ const char *fragmentShaderSource =
     "{\n"
     // mix : linear interpolation between two values based on 3rd value
     // ex) 0.2 : 80% of texture1, 20% of texture2
-    "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), 0.2);\n "
+    // "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), 0.3);\n "
+    "   vec2 reversedTexCoords = vec2(1.0 - TexCoord.x, TexCoord.y);\n "
+    "   FragColor = texture(texture1, reversedTexCoords);\n "
     "}\n\0";
 
 int main()
