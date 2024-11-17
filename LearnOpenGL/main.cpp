@@ -3,6 +3,10 @@
 #include <iostream>
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 /*
 * >> GLFW ? GLAD ?
 penGL의 specification을 OS에 상관없이 
@@ -28,12 +32,14 @@ const char *vertexShaderSource =
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
     "layout (location = 2) in vec2 aTexCoord;\n"
+
+    "uniform mat4 transform;;\n"        // transform matrix
     "uniform vec3 horizontalOffset;\n"
     "out vec3 outColor; \n"
     "out vec2 TexCoord; \n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.x + horizontalOffset.x, aPos.y  + horizontalOffset.y, aPos.z, 1.0);\n"
+    "   gl_Position = transform * vec4(aPos, 1.0f);\n"
     "   outColor = aColor; \n"
     "   TexCoord = aTexCoord; \n"
     "}\0";
@@ -435,6 +441,19 @@ int main()
     glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
 
     #pragma endregion
+
+    // glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    // glm::mat4 trans = glm::mat4(1.0f);
+    // trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
+    // vec = trans * vec;
+    // std::cout << vec.x << vec.y << vec.z << std::endl;
+
+    glm::mat4 trans = glm::mat4(1.0f); // identify
+    
+    // 아래 함수는 1) scale 하고 2) 그 다음 rotate
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0)); // z 축으로 90도 회전
+    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5)); // 0.5배 scale
+
     
     while (!glfwWindowShouldClose(window))
     {
@@ -446,6 +465,7 @@ int main()
         float timeValue = glfwGetTime();
         float greenValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
 
+
         // 못찾을 경우 -1 을 리턴
         // 중요 : shader 내에서 uniform 을 찾는 것은 꼭 shader 를 사용한 이후가
         // 아니어도 된다. 단, 해당 uniform 에 값을 세팅하는 것은 shader 사용 이후
@@ -454,6 +474,9 @@ int main()
         
         int textureMixValue =
             glGetUniformLocation(shaderProgram, "textureMixValue");
+
+        unsigned int transformLoc =
+            glGetUniformLocation(shaderProgram, "transform");
 
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
@@ -475,6 +498,8 @@ int main()
         );
 
         glUniform1f(textureMixValue, greenValue);
+
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
