@@ -42,16 +42,16 @@ const char *fragmentShaderSource =
     "out vec4 FragColor;\n"
     "in vec3 outColor;\n"
     "in vec2 TexCoord;\n"
+    "uniform float textureMixValue;\n"
     "uniform sampler2D texture1;\n"
     "uniform sampler2D texture2;\n"
     "void main()\n"
     "{\n"
     // mix : linear interpolation between two values based on 3rd value
     // ex) 0.2 : 80% of texture1, 20% of texture2
-    // "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), 0.3);\n "
+    "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), textureMixValue);\n "
     // "   vec2 reversedTexCoords = vec2(1.0 - TexCoord.x, TexCoord.y);\n "
     // "   FragColor = texture(texture1, reversedTexCoords);\n "
-    "   FragColor = texture(texture2, TexCoord);\n " // 4x repetition
     "}\n\0";
 
 int main()
@@ -210,10 +210,10 @@ int main()
 
         float vertices[] = {
             // positions // colors // texture coords
-            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f, // top right
-            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // bottom right
+            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
             -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f  // top left
+            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
         };
 
 
@@ -364,12 +364,14 @@ int main()
                  data);
 
     // Set texture wrapping mode to GL_CLAMP_TO_EDGE
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // wrapping_mode 란, texture 좌표 가 넘어갔을 때 어떻게 처리할지를 
+    // GL_CLAMP_TO_EDGE : 0 보다 작거나, 1 보다 큰 값은 가장 자리 픽셀의 색상으로 채워진다.
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // mipmap 을 생성한다.
     // 현재 bind 된 texture 에 대해 mipmap 을 생성한다.
@@ -404,6 +406,16 @@ int main()
                  GL_UNSIGNED_BYTE,
                  data2);
 
+    // Set texture wrapping mode to GL_CLAMP_TO_EDGE
+    // wrapping_mode 란, texture 좌표 가 넘어갔을 때 어떻게 처리할지를
+    // GL_CLAMP_TO_EDGE : 0 보다 작거나, 1 보다 큰 값은 가장 자리 픽셀의 색상으로 채워진다.
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // set texture filtering parameters
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // mipmap 을 생성한다.
     // 현재 bind 된 texture 에 대해 mipmap 을 생성한다.
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -418,6 +430,7 @@ int main()
 
     // uniform sampler2D texture1 에 세팅
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
+
    //  shader.setInt("texture2", 1); // or with shader class
     glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
 
@@ -438,6 +451,9 @@ int main()
         // 아니어도 된다. 단, 해당 uniform 에 값을 세팅하는 것은 shader 사용 이후
         int horizontalOffsetLocation =
             glGetUniformLocation(shaderProgram, "horizontalOffset");
+        
+        int textureMixValue =
+            glGetUniformLocation(shaderProgram, "textureMixValue");
 
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
@@ -457,6 +473,8 @@ int main()
         glUniform3f(horizontalOffsetLocation, 
             0.5f, 0.5f, 0.5f
         );
+
+        glUniform1f(textureMixValue, greenValue);
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

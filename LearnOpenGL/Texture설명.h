@@ -6,6 +6,11 @@ texture coord 은 0 ~ 1 사이이다
 그런데 만약 이보다 큰 감ㅅ을 specify 한 경우 ?
 이 경우를 어떻게 처리할지에 대한 개념이다.
 
+기본값 : GL_REPEAT 이다.
+
+그래서 예를 들어, tex coor 을 vertic 정보에서 0 ~ 2 범위로 세팅하면, texture 가 4개짜리로 반복되어서
+화면에 나타날 것이다.
+
 • GL_REPEAT: 
 	The default behavior for textures. Repeats the texture image.
 • GL_MIRRORED_REPEAT: 
