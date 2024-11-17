@@ -42,10 +42,13 @@ const char *fragmentShaderSource =
     "out vec4 FragColor;\n"
     "in vec3 outColor;\n"
     "in vec2 TexCoord;\n"
-    "uniform sampler2D ourTexture;\n"
+    "uniform sampler2D texture1;\n"
+    "uniform sampler2D texture2;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = texture(ourTexture, TexCoord);\n"
+    // mix : linear interpolation between two values based on 3rd value
+    // ex) 0.2 : 80% of texture1, 20% of texture2
+    "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), 0.2);\n "
     "}\n\0";
 
 int main()
@@ -94,6 +97,14 @@ int main()
     #pragma endregion
 
     unsigned int shaderProgram;
+
+    struct point
+    {
+        int x;
+        int y;
+    };
+
+    void* h = (void *)0;
 
     // shader
     #pragma region Shader
@@ -326,14 +337,14 @@ int main()
                                     0);
 
     // index buffer, vertex buffer 처럼 마찬가지로 texture object 를 생성한다.
-    unsigned int texture; // unsigned int 배열이 될 수도 있다. 여러 개의 texture 담을 경우
+    unsigned int texture1; // unsigned int 배열이 될 수도 있다. 여러 개의 texture 담을 경우
     glGenTextures(
         1, // 만들고자 하는 texture 들의 개수
-        &texture);
+        &texture1);
 
     // texture 를 bind 시켜서
     // 이후의 subsequent texture 관련 작업이 이 texture 에 대해 이루어지게 한다.
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, texture1);
 
     // 이제 실제 texture 메모리를 할당한다.
     // 해당 함수 까지 호출하면, texture object 에 texture image 가 실제 attach 된 것
@@ -353,7 +364,51 @@ int main()
     // 현재 bind 된 texture 에 대해 mipmap 을 생성한다.
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    unsigned char *data2 = stbi_load(RESOURCE_ROOT "curious.png",
+                                    &width,
+                                    &height,
+                                    &nrChannels,
+                                    0);
+
+    // index buffer, vertex buffer 처럼 마찬가지로 texture object 를 생성한다.
+    unsigned int
+        texture2; // unsigned int 배열이 될 수도 있다. 여러 개의 texture 담을 경우
+    glGenTextures(1, // 만들고자 하는 texture 들의 개수
+                  &texture2);
+
+    // texture 를 bind 시켜서
+    // 이후의 subsequent texture 관련 작업이 이 texture 에 대해 이루어지게 한다.
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    // 이제 실제 texture 메모리를 할당한다.
+    // 해당 함수 까지 호출하면, texture object 에 texture image 가 실제 attach 된 것
+    // 하지만, 여기까지만 하면 texture image 의 base-level 만 존재하는 것
+    glTexImage2D(GL_TEXTURE_2D, // texture target
+                 0,             // mipmap level
+                 GL_RGB,        // format
+                 width,
+                 height,
+                 0,      // 항상 0
+                 GL_RGBA, // source image 의 format -> png 은 alpha channel 이 있으므로
+                 GL_UNSIGNED_BYTE,
+                 data2);
+
+    // mipmap 을 생성한다.
+    // 현재 bind 된 texture 에 대해 mipmap 을 생성한다.
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     stbi_image_free(data);
+
+    #pragma endregion
+
+    #pragma region Texture Unit
+
+    glUseProgram(shaderProgram); // don’t forget to activate the shader first!
+
+    // uniform sampler2D texture1 에 세팅
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
+   //  shader.setInt("texture2", 1); // or with shader class
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
 
     #pragma endregion
     
@@ -370,21 +425,27 @@ int main()
         // 못찾을 경우 -1 을 리턴
         // 중요 : shader 내에서 uniform 을 찾는 것은 꼭 shader 를 사용한 이후가
         // 아니어도 된다. 단, 해당 uniform 에 값을 세팅하는 것은 shader 사용 이후
-        int vertexColorLocation =
+        int horizontalOffsetLocation =
             glGetUniformLocation(shaderProgram, "horizontalOffset");
 
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
         // 해당 shader program 을 사용하게 된다.
         glUseProgram(shaderProgram);
+
+        // 마찬가지로, 아래 texture 함수들도 shader program 사용 이후에 호출되어야 한다.
+        glActiveTexture(GL_TEXTURE0);  // activate texture unit first
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
         glBindVertexArray(VAO);
-        glBindTexture(GL_TEXTURE_2D, texture);
 
         // 반드시 해당 uniform 에 값을 사용하기 전에
         // shader program 을 사용해야 한다.
-        glUniform3f(
-            vertexColorLocation, 
-            0.5f, 0.5f, 0.5f);
+        glUniform3f(horizontalOffsetLocation, 
+            0.5f, 0.5f, 0.5f
+        );
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
