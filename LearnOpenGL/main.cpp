@@ -272,19 +272,18 @@ int main()
         glBufferData(GL_ARRAY_BUFFER,
                      sizeof(vertices),
                      vertices,
-
                      /*
-        * 그래픽 카드가 우리가 제공한 데이터를 어떤식으로 다룰지를 결정한다.
-        * 
-        * > GL_STATIC_DRAW : data 는 한번 set, 여러 번 사용됨
-        * > GL_DYNAMIC_DRAW : data 는 여러 번 set, 여러 번 사용됨
-        * > GL_STREAM_DRAW : data 는 한번 set, 정말 적게 사용됨
-        * 
-        * 우리가 현재 넘겨주는 정점 정보는 , 변하지 않고, 여러번 사용된다.
-        * 만약 자주 변하는 정보라면 GL_DYNAMIC_DRAW 을 사용하여
-        * Opengl 이 빠르게 쓸 수 있는 메모리 공간으로 데이터를 위치시킬 수 있게 
-        * 해야 한다.
-        */
+                    * 그래픽 카드가 우리가 제공한 데이터를 어떤식으로 다룰지를 결정한다.
+                    * 
+                    * > GL_STATIC_DRAW : data 는 한번 set, 여러 번 사용됨
+                    * > GL_DYNAMIC_DRAW : data 는 여러 번 set, 여러 번 사용됨
+                    * > GL_STREAM_DRAW : data 는 한번 set, 정말 적게 사용됨
+                    * 
+                    * 우리가 현재 넘겨주는 정점 정보는 , 변하지 않고, 여러번 사용된다.
+                    * 만약 자주 변하는 정보라면 GL_DYNAMIC_DRAW 을 사용하여
+                    * Opengl 이 빠르게 쓸 수 있는 메모리 공간으로 데이터를 위치시킬 수 있게 
+                    * 해야 한다.
+                    */
                      GL_STATIC_DRAW);
 
         // shader 을 준비하는 것만으로는 부족하다
@@ -506,6 +505,22 @@ int main()
             0 // offset in ebo
         );
         // glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glm::mat4 trans2 = glm::mat4(1.0f); // identify
+        trans2 = glm::translate(trans2,
+                               glm::vec3(-0.5f, 0.5f, 0.0f)); 
+        trans2 = glm::rotate(trans2,
+                            (float)sin(glfwGetTime()),
+                            glm::vec3(0.0f, 0.0f, 1.0f)); // z 축 기준 회전
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans2));
+
+        // indexed 형태로 그리는 함수
+        glDrawElements(
+            GL_TRIANGLES,
+            6, 
+            GL_UNSIGNED_INT, 
+            0                
+        );
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering
