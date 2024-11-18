@@ -442,19 +442,6 @@ int main()
 
     #pragma endregion
 
-    // glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-    // glm::mat4 trans = glm::mat4(1.0f);
-    // trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
-    // vec = trans * vec;
-    // std::cout << vec.x << vec.y << vec.z << std::endl;
-
-    glm::mat4 trans = glm::mat4(1.0f); // identify
-    
-    // 아래 함수는 1) scale 하고 2) 그 다음 rotate
-    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0)); // z 축으로 90도 회전
-    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5)); // 0.5배 scale
-
-    
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -498,6 +485,12 @@ int main()
         );
 
         glUniform1f(textureMixValue, greenValue);
+
+        glm::mat4 trans = glm::mat4(1.0f); // identify
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // 좌측 하단 이동
+        trans = glm::rotate(trans,
+                            (float)glfwGetTime(),
+                            glm::vec3(0.0f, 0.0f, 1.0f)); // z 축 기준 회전
 
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
