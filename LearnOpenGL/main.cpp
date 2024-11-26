@@ -120,12 +120,64 @@ int main()
         //     1.0f // top
         // };
 
+        // 4 point Rectangle
+        // -> glDrawElements 에서 6 개의 정점을 넘겨주면 된다.
+        // -> 2개의 삼각형. 총 6개의 정점
+        // float vertices[] = {
+        //     // positions // colors // texture coords
+        //     0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+        //     0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+        //     -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+        //     -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+        // };
+
+        // 6 개의 면, 36 개의 vertices
+        // ex) glDrawArrays(GL_TRIANGLES, 0, 36);
         float vertices[] = {
-            // positions // colors // texture coords
-            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-            -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+            0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 
+            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+
+            -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
+            0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, 
+            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+            -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 
+            -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
+            -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 
+            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+
+            0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 
+            0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 
+            0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 
+            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 
+            -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f
         };
 
 
@@ -202,7 +254,7 @@ int main()
             3,                 // vertex attribute 의 크기
             GL_FLOAT,          // 데이터의 type
             GL_FALSE,          // 정규화 여부
-            8 * sizeof(float), // 각 정점 데이터 사이의 간격
+            5 * sizeof(float), // 각 정점 데이터 사이의 간격
             (void *)0 // 메모리 상에서 data 가 시작하는 offset
         );
 
@@ -211,24 +263,24 @@ int main()
         glEnableVertexAttribArray(0);
 
         // color attribute
-        glVertexAttribPointer(1,
-                              3,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              8 * sizeof(float),
-            // color 정보는, vertex 정보 다음에 위치하므로 아래와 같은 offset 세팅
-                              (void *)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+        // glVertexAttribPointer(1,
+        //                       3,
+        //                       GL_FLOAT,
+        //                       GL_FALSE,
+        //                       8 * sizeof(float),
+        //     // color 정보는, vertex 정보 다음에 위치하므로 아래와 같은 offset 세팅
+        //                       (void *)(3 * sizeof(float)));
+        // glEnableVertexAttribArray(1);
 
         // texture attribute
-        glVertexAttribPointer(2,
+        glVertexAttribPointer(1,
                               2,
                               GL_FLOAT,
                               GL_FALSE,
-                              8 * sizeof(float),
-                              (void *)(6 * sizeof(float)));
+                              5 * sizeof(float),
+                              (void *)(3 * sizeof(float)));
 
-        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(1);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -350,12 +402,19 @@ int main()
 
     #pragma endregion
 
+    #pragma region DEPTH TEST
+    // enable depth test
+    glEnable(GL_DEPTH_TEST);
+    #pragma endregion
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT); 
+        // glClear(GL_COLOR_BUFFER_BIT); // clear the color buffer
+        // glClear(GL_DEPTH_BUFFER_BIT); // clear the depth buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear both color, depth
 
         float timeValue = glfwGetTime();
         float mixValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
@@ -377,8 +436,8 @@ int main()
         // model : local space -> world space 로 변환
         glm::mat4 model = glm::mat4(1.0f); 
         model = glm::rotate(model,
-                            glm::radians(mixValue * 30.f),
-                            glm::vec3(1.0f, 0.0f, 0.0f)); // x축 회전
+                         (float)glfwGetTime(),
+                         glm::vec3(0.5f, 1.0f, 0.0f)); // 비스듬한 축 회전
 
         // view : world space -> view space 로 변환
         glm::mat4 view = glm::mat4(1.0f);
@@ -410,12 +469,14 @@ int main()
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) : wire frame 해제
 
         // indexed 형태로 그리는 함수
-        glDrawElements(GL_TRIANGLES,
-            6, // 그리고 싶은 element 의 개수 (6개 정점을 그리고 싶다)
-            GL_UNSIGNED_INT,  // type of indices
-            0 // offset in ebo
-        );
+        // glDrawElements(GL_TRIANGLES,
+        //     36, // 그리고 싶은 element 의 개수 (ex. 6개 정점을 그리고 싶다)
+        //     GL_UNSIGNED_INT,  // type of indices
+        //     0 // offset in ebo
+        // );
+
         // glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering

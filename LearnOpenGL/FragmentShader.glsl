@@ -2,7 +2,6 @@
 
 out vec4 FragColor;
 
-in vec3 outColor;
 in vec2 TexCoord;
 
 uniform float mixValue;
