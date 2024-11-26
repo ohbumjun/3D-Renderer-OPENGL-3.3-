@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <stb_image.h>
+#include "Shader.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,39 +27,6 @@ LFW는 OpenGL 컨텍스트를 사용하여 창을 만들고 관리 할 수있는
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 void processInput(GLFWwindow *window);
-
-const char *vertexShaderSource =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "layout (location = 2) in vec2 aTexCoord;\n"
-
-    "uniform mat4 transform;;\n"        // transform matrix
-    "uniform vec3 horizontalOffset;\n"
-    "out vec3 outColor; \n"
-    "out vec2 TexCoord; \n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = transform * vec4(aPos, 1.0f);\n"
-    "   outColor = aColor; \n"
-    "   TexCoord = aTexCoord; \n"
-    "}\0";
-const char *fragmentShaderSource =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 outColor;\n"
-    "in vec2 TexCoord;\n"
-    "uniform float textureMixValue;\n"
-    "uniform sampler2D texture1;\n"
-    "uniform sampler2D texture2;\n"
-    "void main()\n"
-    "{\n"
-    // mix : linear interpolation between two values based on 3rd value
-    // ex) 0.2 : 80% of texture1, 20% of texture2
-    "   FragColor = mix(texture(texture1, TexCoord),texture(texture2, TexCoord), textureMixValue);\n "
-    // "   vec2 reversedTexCoords = vec2(1.0 - TexCoord.x, TexCoord.y);\n "
-    // "   FragColor = texture(texture1, reversedTexCoords);\n "
-    "}\n\0";
 
 int main()
 {
@@ -105,8 +73,6 @@ int main()
 
     #pragma endregion
 
-    unsigned int shaderProgram;
-
     struct point
     {
         int x;
@@ -116,73 +82,13 @@ int main()
     void* h = (void *)0;
 
     // shader
-    #pragma region Shader
-    {
-        // shader object 를 생성한다.
-        unsigned int vertexShader;
+    std::string vrxShaderPath =
+        "D:\OpenGL\LearnOpenGL\LearnOpenGLSrc\LearnOpenGL\VertexShader";
 
-        // 인자 : 어떤 type 의 shader 를 만들고자 하는지
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    std::string fragShaderPath =
+        "D:\OpenGL\LearnOpenGL\LearnOpenGLSrc\LearnOpenGL\FragmentShader";
 
-        // shader source code 를 우리가 만들어낸 shader object 에 붙여준다.
-        // 그러면 복사본이 넘어간다.
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-
-        // shder object 를 컴파일한다.
-        glCompileShader(vertexShader);
-
-        // Shader Compile 이 성공적으로 이루어졌는지 확인한다.
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-        if (!success)
-        {
-            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                      << infoLog << std::endl;
-        }
-
-        // fragment shader
-        unsigned int fragmentShader;
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-        glCompileShader(fragmentShader);
-
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-        if (!success)
-        {
-            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                      << infoLog << std::endl;
-        }
-
-        // A shader program object is the final linked version
-        // of multiple shaders combined
-        
-        shaderProgram = glCreateProgram();
-
-        // shader program 에 vertex shader 와 fragment shader 를 붙인다.
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-
-        // shader program 을 link 한다.
-        glLinkProgram(shaderProgram);
-
-        // Link 성공 여부 판단하기
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                      << infoLog << std::endl;
-        }
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-    }
-    #pragma endregion
+    Shader ourShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
     
     #pragma region Vertex
     unsigned int VAO;
@@ -431,13 +337,15 @@ int main()
 
     #pragma region Texture Unit
 
-    glUseProgram(shaderProgram); // don’t forget to activate the shader first!
+    // glUseProgram(shaderProgram); // don’t forget to activate the shader first!
+    ourShader.use();
 
     // uniform sampler2D texture1 에 세팅
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
+    // glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
+    ourShader.setInt("texture1", 0); // or with shader class
 
-   //  shader.setInt("texture2", 1); // or with shader class
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
+    // glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
+    ourShader.setInt("texture2", 1); // or with shader class
 
     #pragma endregion
 
@@ -451,23 +359,11 @@ int main()
         float timeValue = glfwGetTime();
         float greenValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
 
-
-        // 못찾을 경우 -1 을 리턴
-        // 중요 : shader 내에서 uniform 을 찾는 것은 꼭 shader 를 사용한 이후가
-        // 아니어도 된다. 단, 해당 uniform 에 값을 세팅하는 것은 shader 사용 이후
-        int horizontalOffsetLocation =
-            glGetUniformLocation(shaderProgram, "horizontalOffset");
-        
-        int textureMixValue =
-            glGetUniformLocation(shaderProgram, "textureMixValue");
-
-        unsigned int transformLoc =
-            glGetUniformLocation(shaderProgram, "transform");
-
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
         // 해당 shader program 을 사용하게 된다.
-        glUseProgram(shaderProgram);
+        // glUseProgram(shaderProgram);
+        ourShader.use();
 
         // 마찬가지로, 아래 texture 함수들도 shader program 사용 이후에 호출되어야 한다.
         glActiveTexture(GL_TEXTURE0);  // activate texture unit first
@@ -477,21 +373,34 @@ int main()
 
         glBindVertexArray(VAO);
 
-        // 반드시 해당 uniform 에 값을 사용하기 전에
-        // shader program 을 사용해야 한다.
-        glUniform3f(horizontalOffsetLocation, 
-            0.5f, 0.5f, 0.5f
+        // model : local space -> world space 로 변환
+        glm::mat4 model = glm::mat4(1.0f); 
+        model = glm::rotate(model,
+                            glm::radians(-85.0f),
+                            glm::vec3(1.0f, 0.0f, 0.0f)); // x축 회전
+
+        // view : world space -> view space 로 변환
+        glm::mat4 view = glm::mat4(1.0f);
+
+        // note that we’re translating the scene in the reverse direction
+        // 즉, 카메라를 z 축 방향 -3이 된다는 것은, Scene 이 그만큼 우리 정면으로 가까워진다는 것 ?
+        // 왜냐면 카메라 이동 방향과 scene 의 movement 가 반대가 되는 개념이기 때문이다.
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        glm::mat4 projection;
+
+        projection = glm::perspective(
+            glm::radians(45.0f),
+            800.0f / 600.0f,
+            0.1f,
+            100.0f
         );
 
-        glUniform1f(textureMixValue, greenValue);
-
-        glm::mat4 trans = glm::mat4(1.0f); // identify
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // 좌측 하단 이동
-        trans = glm::rotate(trans,
-                            (float)glfwGetTime(),
-                            glm::vec3(0.0f, 0.0f, 1.0f)); // z 축 기준 회전
-
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        // 반드시 해당 uniform 에 값을 사용하기 전에
+        // shader program 을 사용해야 한다.
+        ourShader.setVec3f("horizontalOffset", glm::vec3(0.5f, 0.5f, 0.5f));
+        ourShader.setFloat("textureMixValue", greenValue);
+        ourShader.setMat4("transform", model);
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -505,22 +414,6 @@ int main()
             0 // offset in ebo
         );
         // glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glm::mat4 trans2 = glm::mat4(1.0f); // identify
-        trans2 = glm::translate(trans2,
-                               glm::vec3(-0.5f, 0.5f, 0.0f)); 
-        trans2 = glm::rotate(trans2,
-                            (float)sin(glfwGetTime()),
-                            glm::vec3(0.0f, 0.0f, 1.0f)); // z 축 기준 회전
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans2));
-
-        // indexed 형태로 그리는 함수
-        glDrawElements(
-            GL_TRIANGLES,
-            6, 
-            GL_UNSIGNED_INT, 
-            0                
-        );
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering

@@ -3,6 +3,7 @@
 file(GLOB LEARNOPENGL_SOURCES 
 "./*.cpp"
 "./*.h"
+"./*.glsl"
 ${CMAKE_SOURCE_DIR}/external/stb_image/stb_image.h
 ${CMAKE_SOURCE_DIR}/external/stb_image/stb_image.cpp
 )

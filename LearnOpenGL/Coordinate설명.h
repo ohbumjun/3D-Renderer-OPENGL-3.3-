@@ -70,4 +70,51 @@ glm::ortho(
 );
 
 2) Perspective Projection : 원근 투영
+
+- 원근감 : Perspective Projection Matrix 를 통해서 원근감을 부여하게 된다.
+
+- Projection Matrix 는 frustum 범위를 clip space 로 변환한다. 뿐만 아니라
+각 정점 좌표의 w 을 조작하여 원근감을 부여한다.
+멀리 있는 꼭짓점의 w 컴포넌트를 크게 만들어 원근감을 조절한다.
+
+- 좌표들이 clip space 로 변환되고 나면, -w ~ w 사이의 좌표로 변환된다.
+해당 범위 밖에 있는 좌표들은 clip 되어 버린다.
+
+- 이제 OpenGL 은 visible 좌표들이
+vertex shader 수행 결과 -1 ~ 1 사이에 놓이기를 요구한다.
+
+그러므로 좌표들이 clip space 에 위치하고 나면
+perspective division 이 clip space 좌표들에 적용된다.
+즉, x,y,z 좌표들은 w 로 나눠진다.
+이후 NDC 좌표계로 변환된다.
+
+ex) 
+glm::mat4 proj = glm::perspective(
+	glm::radians(45.0f),			// fov : field of view -> 보통 45도
+	(float)width /(float)height,  // aspect ratio 
+	0.1f,									// near
+	100.0f								// far
+);
+
+glm::perspective : visible space 를 정의하는 거대한 frustum 을 만들어낸다.
+해당 frustrum 밖에 있는 대상들은 clip space 로 보내지지 않고 clip 된다.
+*/
+
+/*
+* >> 최종 정리
+
+local -> clip 으로 변환되는 과정
+
+Vclip = Mprojection ·Mview · Mmodel ·Vlocal
+
+최종 vertex 는 vertex shader 에서 gl_Position 에 저장되어야 한다.
+그러면 OpenGL 이 알아서 perspective division 과 clipping 을 수행하게 된다.
+
+자. 다시 복기하자면, vertex shader 의 결과물은 clip space 좌표계에 놓여야 한다.
+
+그 다음 이 clip space 의 좌표계들은 perspective division 을 거쳐 NDC 좌표계로 변환된다.
+
+이후 , OpenGL 은 NDC 좌표계의 좌표들을 glViewPort 을 통해 screen 좌표계로 변환한다.
+(viewport transform)
+
 */
