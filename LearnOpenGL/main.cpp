@@ -83,10 +83,10 @@ int main()
 
     // shader
     std::string vrxShaderPath =
-        "D:\OpenGL\LearnOpenGL\LearnOpenGLSrc\LearnOpenGL\VertexShader";
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\VertexShader.glsl";
 
     std::string fragShaderPath =
-        "D:\OpenGL\LearnOpenGL\LearnOpenGLSrc\LearnOpenGL\FragmentShader";
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\FragmentShader.glsl";
 
     Shader ourShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
     
@@ -332,6 +332,7 @@ int main()
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(data);
+    stbi_image_free(data2);
 
     #pragma endregion
 
@@ -344,7 +345,7 @@ int main()
     // glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
     ourShader.setInt("texture1", 0); // or with shader class
 
-    // glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1); // or with shader class
+    // glUniform1i(glGetUniformLocation(ourShader.ID, "texture2"),1); // or with shader class
     ourShader.setInt("texture2", 1); // or with shader class
 
     #pragma endregion
@@ -357,7 +358,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT); 
 
         float timeValue = glfwGetTime();
-        float greenValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
+        float mixValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
 
         // shader program 을 사용한다.
         // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
@@ -376,7 +377,7 @@ int main()
         // model : local space -> world space 로 변환
         glm::mat4 model = glm::mat4(1.0f); 
         model = glm::rotate(model,
-                            glm::radians(-85.0f),
+                            glm::radians(mixValue * 30.f),
                             glm::vec3(1.0f, 0.0f, 0.0f)); // x축 회전
 
         // view : world space -> view space 로 변환
@@ -398,9 +399,10 @@ int main()
 
         // 반드시 해당 uniform 에 값을 사용하기 전에
         // shader program 을 사용해야 한다.
-        ourShader.setVec3f("horizontalOffset", glm::vec3(0.5f, 0.5f, 0.5f));
-        ourShader.setFloat("textureMixValue", greenValue);
-        ourShader.setMat4("transform", model);
+        ourShader.setFloat("mixValue", mixValue);
+        ourShader.setMat4("model", model);
+        ourShader.setMat4("view", view);
+        ourShader.setMat4("projection", projection);
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

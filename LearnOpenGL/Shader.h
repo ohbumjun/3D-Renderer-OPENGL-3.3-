@@ -31,21 +31,35 @@ public:
     // utility uniform functions
     void setBool(const std::string& uniformName, bool value) const
     {
-        glUniform1i(glGetUniformLocation(ID, uniformName.c_str()), (int)value);
+        unsigned int uniform = glGetUniformLocation(ID, uniformName.c_str());
+
+        // 못찾을 경우 -1 리턴
+        // assert(uniform != -1);
+
+        glUniform1i(uniform, (int)value);
     }
     void setInt(const std::string &uniformName, int value) const
     {
-        glUniform1i(glGetUniformLocation(ID, uniformName.c_str()), value);
+        unsigned int uniform = glGetUniformLocation(ID, uniformName.c_str());
+
+        // 못찾을 경우 -1 리턴
+        // assert(uniform != -1);
+
+        glUniform1i(uniform, value);
     }
     void setFloat(const std::string &uniformName, float value) const
     {
-        glUniform1f(glGetUniformLocation(ID, uniformName.c_str()), value);
+        unsigned int uniform = glGetUniformLocation(ID, uniformName.c_str());
+        // 못찾을 경우 -1 리턴
+        // assert(uniform != -1);
+
+        glUniform1f(uniform, value);
     }
     void setVec3f(const std::string &uniformName, const glm::vec3& value) const
     {
         unsigned int uniform = glGetUniformLocation(ID, uniformName.c_str());
         // 못찾을 경우 -1 리턴
-        assert(uniform != -1);
+        // assert(uniform != -1);
         glUniform3f(uniform, value.x, value.y, value.z);
     }
 
@@ -53,8 +67,8 @@ public:
     void setMat4(const std::string& uniformName, const glm::mat4& value) const
     {
         unsigned int uniform = glGetUniformLocation(ID, uniformName.c_str());
-        assert(uniform != -1);
-        glUniformMatrix4fv(uniform, 1, GL_FALSE, &value[0][0]);
+        // assert(uniform != -1);
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(value));
 	}
 };
 #endif
