@@ -466,6 +466,73 @@ int main()
 
     #pragma endregion
 
+    #pragma region Euler Angle
+/*
+* >> Euler Angle (p101)
+* - 흔히 
+1) pitch (x축 기준 회전 : 위,아래 ) 
+2) yaw (y축 기준 회전 : 좌,우)
+3) roll (z축 기준 회전 : 알아서 상상하삼) 을 사용하여 카메라를 회전시키는 방법
+* - 각 축 ? 에서의 회전을 "combine" 시킨 하나의 single value 를 의미하게 된다.
+* 
+* Pitch, Yaw 만 일단 고려해본다.
+* Pitch 와 Yaw 가 주어지면 새로운 direction 3d vector 를 얻을 수 있다.
+* 
+* >> Yaw 기준 회전 
+* - xz 평명
+* - 각도 : 반시계 방향 양수
+* - x 축 : cos 각도 , z 축 : sin 각도
+
+glm::vec3 direction;
+direction.x = cos(glm::radians(yaw)); // convert to radians first
+direction.z = sin(glm::radians(yaw));
+
+* >> Pitch 기준 회전
+* - yz 평면
+* - 각도 : 위로 양수
+* - y 축 : sin 각도 , z 축 : cos 각도
+direction.y = sin(glm::radians(pitch));
+
+>> 종합
+- 그런데 x,z 평면은 cos (pitch) 에 의해 영향을 받는다.
+
+(부가 설명)
+>> 삼각함수의 성질:
+직각삼각형에서 빗변의 길이가 1일 때, 
+한 예각의 크기가 θ라면 빗변에 인접한 변의 길이는 cos(θ), 
+빗변에 대변하는 변의 길이는 sin(θ)가 됩니다.
+
+>> 피치 각과의 관계:
+피치 각이 변함에 따라, 원래 x축과 z축 방향을 가리키던 벡터가 
+x-z 평면 상에서 기울어지면서 새로운 직각삼각형이 형성됩니다.
+
+이 새로운 직각삼각형에서 빗변의 길이는 변하지 않지만, 
+빗변에 인접한 변의 길이(즉, x축과 z축 성분)는 cos(pitch)만큼 줄어들게 됩니다.
+
+따라서, 원래 x축과 z축 성분에 cos(pitch)를 곱해주어야 
+새로운 직각삼각형에서의 x축과 z축 성분을 정확하게 계산할 수 있습니다.
+
+direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+direction.y = sin(glm::radians(pitch));
+direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+
+>> 카메라 방향 조절 : yaw = -90.0f;
+- 위 원리대로 한다면, 카메라는 맨 처음에 양의 x 축 방향을 향하게 된다.
+- 그런데 default 로 z 음의 방향을 바라보게 하고 싶다.
+- yaw 가 0 이면, 양의 x 축 방향을 가리키므로, 시계 방향 90도 회전을 시키면 된다.
+- 양의 각도는 반 시계 방향을 가리키므로, yaw : -90 도
+
+자. 여기서 의문일 수 있다. 아니 오른손 좌표계에서 y 축 기준 시계방향
+회전시키면 x 축은 z 축 양의 방향을 가리키는 거 아닌가 ?
+왜 그런데 저기서는 z 축 '음' 의 방향을 가라킨다고 얘기하는 거지 ?
+
+여기서 말하는 yaw, pitch 는 오른손 좌표계랑 개념이 아예 다르다.
+오른쪽 x, 위 y, 앞쪽이 z (즉, z 축이 opengl 좌표계랑 반대)
+
+*/
+    #pragma endregion
+
     glm::vec3 cubePositions[] = {glm::vec3(0.0f, 0.0f, 0.0f),
                                  glm::vec3(2.0f, 5.0f, -15.0f),
                                  glm::vec3(-1.5f, -2.2f, -2.5f),
