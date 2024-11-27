@@ -190,6 +190,7 @@ int main()
             2,
             3 // second triangle
         };
+
         /*
         * VAO
         * - 속성 ~ VBO configure 정보를 한번에 담는 object
@@ -407,6 +408,17 @@ int main()
     glEnable(GL_DEPTH_TEST);
     #pragma endregion
 
+    glm::vec3 cubePositions[] = {glm::vec3(0.0f, 0.0f, 0.0f),
+                                 glm::vec3(2.0f, 5.0f, -15.0f),
+                                 glm::vec3(-1.5f, -2.2f, -2.5f),
+                                 glm::vec3(-3.8f, -2.0f, -12.3f),
+                                 glm::vec3(2.4f, -0.4f, -3.5f),
+                                 glm::vec3(-1.7f, 3.0f, -7.5f),
+                                 glm::vec3(1.3f, -2.0f, -2.5f),
+                                 glm::vec3(1.5f, 2.0f, -2.5f),
+                                 glm::vec3(1.5f, 0.2f, -1.5f),
+                                 glm::vec3(-1.3f, 1.0f, -1.5f)};
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -459,9 +471,21 @@ int main()
         // 반드시 해당 uniform 에 값을 사용하기 전에
         // shader program 을 사용해야 한다.
         ourShader.setFloat("mixValue", mixValue);
-        ourShader.setMat4("model", model);
+       //  ourShader.setMat4("model", model);
         ourShader.setMat4("view", view);
         ourShader.setMat4("projection", projection);
+
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model,
+                                (float)glfwGetTime()  + glm::radians(angle),
+                                glm::vec3(1.0f, 0.3f, 0.5f));
+            ourShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // wire frame mode 로 그리기
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
