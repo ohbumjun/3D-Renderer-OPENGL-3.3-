@@ -408,6 +408,47 @@ int main()
     glEnable(GL_DEPTH_TEST);
     #pragma endregion
 
+    #pragma region Camera
+
+    /*
+    // Camera 의 World Pos
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+
+    // Camer Direction
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    // Camera Dir : nagative z 축 방향 (오른손 좌표계)
+    glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+
+    // 아래의 camera right 을 얻기 위해서 up 을 정의 (일종의 trick)
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    // positive x- axis
+    // 참고 : 만약 negative x- axis 를 원한다면, cross 순서를 변경 ex) glm::cross(cameraDirection, up)
+    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+
+    // positive y- axis
+    glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight); // y
+
+    // LookAt matrix
+    // 3개의 view / camera space vector 를 정의했다.
+    // 해당 matrix 들을 활용하여 LookAt matrix 를 만들 수 있다.
+    // 방법
+    // - 1) camera space origin 을 원점으로 이동시키는 translation matrix
+    //  ex) 현재 camera pos 가 (0,0,3) 이라면, -cameraPos 만큼 이동시키는 matrix
+    // - 2) camera space 의 axes 를 world space 의 axes 로 mapping 시키는 rotation matrix
+    //  ex) right, up, direction 을 row 로 하는 matrix !
+    // 이를 통해 만들어지는 LookAt matrix 는 모든 world 좌표계를 camera 좌표계로 이동시킨다.
+    glm::mat4 view;
+    
+    // sample
+    view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), // Camera Pos
+                       glm::vec3(0.0f, 0.0f, 0.0f), // Camera Target Pos
+                       glm::vec3(0.0f, 1.0f, 0.0f)); // Camera Right 을 계산하기 위해 사용한 'up'
+    */
+
+    #pragma endregion
+
     glm::vec3 cubePositions[] = {glm::vec3(0.0f, 0.0f, 0.0f),
                                  glm::vec3(2.0f, 5.0f, -15.0f),
                                  glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -452,12 +493,22 @@ int main()
                          glm::vec3(0.5f, 1.0f, 0.0f)); // 비스듬한 축 회전
 
         // view : world space -> view space 로 변환
-        glm::mat4 view = glm::mat4(1.0f);
+        // glm::mat4 view = glm::mat4(1.0f);
 
         // note that we’re translating the scene in the reverse direction
         // 즉, 카메라를 z 축 방향 -3이 된다는 것은, Scene 이 그만큼 우리 정면으로 가까워진다는 것 ?
         // 왜냐면 카메라 이동 방향과 scene 의 movement 가 반대가 되는 개념이기 때문이다.
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        const float radius = 10.0f;
+        float camX = sin(glfwGetTime()) * radius;
+        float camZ = cos(glfwGetTime()) * radius;
+
+        // 실시간으로 camera 위치 변경. 단 바라보는 target 은 고정
+        view = glm::lookAt(glm::vec3(camX, 0.0, camZ),
+                           glm::vec3(0.0, 0.0, 0.0),
+                           glm::vec3(0.0, 1.0, 0.0));
+
 
         glm::mat4 projection;
 
