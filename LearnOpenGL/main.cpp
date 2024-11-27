@@ -28,6 +28,19 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 void processInput(GLFWwindow *window);
 
+// Camera 의 World Pos
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+
+// Camer Direction
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+
+// glm::cross 를 통해서 Camera Right 을 얻기 위한 up vector
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float deltaTime = 0.0f; // Time between current frame and last frame
+
+float lastFrame = 0.0f; // Time of last frame
+
 int main()
 {
     #pragma region OpenGL 초기화
@@ -425,6 +438,10 @@ int main()
 
     // positive x- axis
     // 참고 : 만약 negative x- axis 를 원한다면, cross 순서를 변경 ex) glm::cross(cameraDirection, up)
+    // ex) https://www.youtube.com/watch?v=eu6i7WJeinw 5:55
+    // ex) https://stackoverflow.com/questions/37519476/how-do-you-use-the-right-hand-rule-for-glmcross
+    // ex) glm::cross(x,y) = z
+    // ex) glm::cross(2번째 손가락, 3번째 손가락) = 엄지 손가락
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
 
     // positive y- axis
@@ -462,6 +479,10 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -492,6 +513,8 @@ int main()
                          (float)glfwGetTime(),
                          glm::vec3(0.5f, 1.0f, 0.0f)); // 비스듬한 축 회전
 
+        glm::mat4 view;
+        // case 1) default camera
         // view : world space -> view space 로 변환
         // glm::mat4 view = glm::mat4(1.0f);
 
@@ -500,15 +523,20 @@ int main()
         // 왜냐면 카메라 이동 방향과 scene 의 movement 가 반대가 되는 개념이기 때문이다.
         // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
-        const float radius = 10.0f;
-        float camX = sin(glfwGetTime()) * radius;
-        float camZ = cos(glfwGetTime()) * radius;
+        // case 2) camera rotate
+        // const float radius = 10.0f;
+        // float camX = sin(glfwGetTime()) * radius;
+        // float camZ = cos(glfwGetTime()) * radius;
+        // 
+        // // 실시간으로 camera 위치 변경. 단 바라보는 target 은 고정
+        // 
+        // view = glm::lookAt(glm::vec3(camX, 0.0, camZ),
+        //                    glm::vec3(0.0, 0.0, 0.0),
+        //                    glm::vec3(0.0, 1.0, 0.0));
 
-        // 실시간으로 camera 위치 변경. 단 바라보는 target 은 고정
-        view = glm::lookAt(glm::vec3(camX, 0.0, camZ),
-                           glm::vec3(0.0, 0.0, 0.0),
-                           glm::vec3(0.0, 1.0, 0.0));
-
+        view = glm::lookAt(cameraPos, 
+            cameraPos + cameraFront,  // camera direction
+            cameraUp);
 
         glm::mat4 projection;
 
@@ -573,4 +601,24 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront; // 앞쪽 이동
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront; // 뒤쪽 이동
+
+    // glm::cross(cameraFront, cameraUp) : negative x 축 (left 방향 vector)
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        glm::vec3 crossVector = glm::cross(cameraFront, cameraUp); // 오른쪽
+        cameraPos -= glm::normalize(crossVector) * cameraSpeed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        glm::vec3 crossVector = glm::cross(cameraFront, cameraUp);
+        cameraPos += glm::normalize(crossVector) * cameraSpeed;
+    }
 }
