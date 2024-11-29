@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stb_image.h>
 #include "Shader.h"
+#include "Camera.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,26 +28,33 @@ LFW는 OpenGL 컨텍스트를 사용하여 창을 만들고 관리 할 수있는
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
-// Camera 의 World Pos
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+// // Camera 의 World Pos
+// glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+// // Camer Direction
+// glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+// // glm::cross 를 통해서 Camera Right 을 얻기 위한 up vector
+// glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+// float yaw = -90.0f;
+// float pitch = 0.0f;
+// float Zoom = 45.f;
+// float fov = 45.f;
 
-// Camer Direction
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-
-// glm::cross 를 통해서 Camera Right 을 얻기 위한 up vector
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 float deltaTime = 0.0f; // Time between current frame and last frame
 
 float lastFrame = 0.0f; // Time of last frame
 
-float yaw = -90.0f;
-float pitch = 0.0f;
 
 float lastMouseX = 0.f, lastMouseY = 0.f; // store last pos
 
 bool firstMouse = true;
+
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
 int main()
 {
@@ -84,6 +92,8 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     // > Mouse
     glfwSetCursorPosCallback(window, mouse_callback);
+    // > Scroll
+    glfwSetScrollCallback(window, scroll_callback);
 
     // vertex attribute 의 최대 개수
     // - 보통 vertex shader 의 input 을 얘기할 때
@@ -448,7 +458,7 @@ int main()
     // ex) https://www.youtube.com/watch?v=eu6i7WJeinw 5:55
     // ex) https://stackoverflow.com/questions/37519476/how-do-you-use-the-right-hand-rule-for-glmcross
     // ex) glm::cross(x,y) = z
-    // ex) glm::cross(2번째 손가락, 3번째 손가락) = 엄지 손가락
+    // ex) glm::cross(2번째 손가락, 3번째 손가락) = 엄지 손가락 (이것을 기준으로 생각)
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
 
     // positive y- axis
@@ -469,6 +479,17 @@ int main()
     view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), // Camera Pos
                        glm::vec3(0.0f, 0.0f, 0.0f), // Camera Target Pos
                        glm::vec3(0.0f, 1.0f, 0.0f)); // Camera Right 을 계산하기 위해 사용한 'up'
+    */
+
+    #pragma endregion
+
+    #pragma region Zoom
+
+    /*
+    * FOV (field of view) 가 Scene 에서 우리가 얼만큼 볼 수 있는지를 결정한다.
+    * fov 값이 작아지면, Scene 에 project 된 (투영된) 공간의 크기는 작아진다.
+    * 같은 NDC 공간에, 더 작은 공간이 투영되는 것이다.
+    * 이를 통해 zoom in 하는 것처럼 보이게 할 수 있다.
     */
 
     #pragma endregion
@@ -620,18 +641,22 @@ int main()
         //                    glm::vec3(0.0, 0.0, 0.0),
         //                    glm::vec3(0.0, 1.0, 0.0));
 
-        view = glm::lookAt(cameraPos, 
-            cameraPos + cameraFront,  // camera direction
-            cameraUp);
+        //view = glm::lookAt(cameraPos, 
+        //    cameraPos + cameraFront,  // camera direction
+        //    cameraUp);
+        view = camera.GetViewMatrix();
 
         glm::mat4 projection;
-
-        projection = glm::perspective(
-            glm::radians(45.0f),
-            800.0f / 600.0f,
-            0.1f,
-            100.0f
-        );
+        projection = glm::perspective(glm::radians(camera.Zoom),
+                                      (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                      0.1f,
+                                      100.0f);
+        // projection = glm::perspective(
+        //     fov,
+        //     800.0f / 600.0f,
+        //     0.1f,    // near
+        //     100.0f // far
+        // );
 
         // 반드시 해당 uniform 에 값을 사용하기 전에
         // shader program 을 사용해야 한다.
@@ -708,6 +733,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
+    /*
     yaw += xoffset; // yaw, pitch update
     pitch += yoffset;
 
@@ -721,6 +747,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(direction);
+    */
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void processInput(GLFWwindow *window)
@@ -730,21 +758,42 @@ void processInput(GLFWwindow *window)
     const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront; // 앞쪽 이동
+    {
+        camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
+        // cameraPos += cameraSpeed * cameraFront; // 앞쪽 이동
+    }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront; // 뒤쪽 이동
+    {
+        camera.ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
+        // cameraPos -= cameraSpeed * cameraFront; // 뒤쪽 이동
+    }
 
     // glm::cross(cameraFront, cameraUp) : negative x 축 (left 방향 vector)
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        glm::vec3 crossVector = glm::cross(cameraFront, cameraUp); // 오른쪽
-        cameraPos -= glm::normalize(crossVector) * cameraSpeed;
+        camera.ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
+        // glm::vec3 crossVector = glm::cross(cameraFront, cameraUp); // 오른쪽
+        // cameraPos -= glm::normalize(crossVector) * cameraSpeed;
     }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        glm::vec3 crossVector = glm::cross(cameraFront, cameraUp);
-        cameraPos += glm::normalize(crossVector) * cameraSpeed;
+        camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+        // glm::vec3 crossVector = glm::cross(cameraFront, cameraUp);
+        // cameraPos += glm::normalize(crossVector) * cameraSpeed;
     }
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    // float sensitivity = 0.05f;
+    // Zoom -= (float)yoffset * sensitivity;
+    // if (Zoom < 1.0f)
+    //     Zoom = 1.0f;
+    // if (Zoom > 45.0f)
+    //     Zoom = 45.0f;
+    // fov = Zoom;
+
+     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
