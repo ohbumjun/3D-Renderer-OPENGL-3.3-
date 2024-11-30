@@ -56,6 +56,8 @@ bool firstMouse = true;
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 int main()
 {
     #pragma region OpenGL 초기화
@@ -111,6 +113,8 @@ int main()
         int y;
     };
 
+    #pragma region Shader Setting
+
     // shader
     std::string vrxShaderPath =
         "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\VertexShader.glsl";
@@ -118,10 +122,49 @@ int main()
     std::string fragShaderPath =
         "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\FragmentShader.glsl";
 
+    /*
+    * >> Light 적용 없는 Shader
+    */
     Shader ourShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+    
+    std::string lightVtxShader =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\LightVertex.glsl";
+
+    std::string lightFragShader =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\LightFrag.glsl";
+
+    /*
+    * >> Light 적용한 Shader
+    */
+    Shader lightShader(lightVtxShader.c_str(), lightFragShader.c_str());
+
+    std::string lightSourceVtxShader =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\LightSourceVertex.glsl";
+
+    std::string lightSourceFragShader =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\LightSourceFrag.glsl";
+    
+    /*
+    >> Light 광원만을 위한 Shader
+    - 나머지 world 상의 물체들은 light 의 색상등에 따라 영향을 받을 것이다
+    - 하지만 광원 그 자체만큼은 항상 고정된 값을 가지게 하고 싶다
+    - 이를 위해서는 light 광원 만을 위한 shader 를 만든다.
+
+    자. 이제 나머지 물체들을 그릴 때는 light Shader 를 이용해서 그리고
+    광원을 그를 때는 광원 shader 를 별도로 이용해서 그려내면 된다.
+    */
+    Shader lightSourceShader(lightSourceVtxShader.c_str(),
+                             lightSourceFragShader.c_str());
+
+    #pragma endregion
     
     #pragma region Vertex
     unsigned int VAO;
+    /*
+        * VBO 란, vertex data 를 담은 opengl 상의 메모리이다.
+        */
+    unsigned int VBO;
+
     {
         float texCoords[] = {
             0.0f,
@@ -246,10 +289,6 @@ int main()
                      indices,
                      GL_STATIC_DRAW);
 
-        /*
-        * VBO 란, vertex data 를 담은 opengl 상의 메모리이다.
-        */
-        unsigned int VBO;
         glGenBuffers(1, &VBO);
 
         // Opengl 은 여러 type 의 buffer object 를 가지고 있다.
@@ -317,6 +356,57 @@ int main()
 
         glBindVertexArray(0); // VAO unbind 시키기
     }   
+    #pragma endregion
+
+    #pragma region Light Shader
+
+    // 실제 광원에 해당하는 object 를 위한  VAO, attribute 생성
+    // 광원을 기존의 VAO 에 설정하여 그릴 수 있다. 하지만 이후 
+    // vertex data 와 attribute 를 자주 변경할 것이고
+    // 이러한 변화들이 광원 물체에 영향 주지 않게 하기 위해서
+    // 별도의 VAO 를 설정할 것이다.
+    unsigned int lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
+    // we only need to bind to the VBO, the container’s VBO’s data
+    // already contains the data.
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // set the vertex attribute
+    glVertexAttribPointer(0,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
+    lightShader.use();
+    lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+    lightShader.setVec3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+    #pragma endregion
+
+    #pragma region Light Source Shader Setting
+    // 실제 광원에 해당하는 object 를 위한  VAO, attribute 생성
+    // 광원을 기존의 VAO 에 설정하여 그릴 수 있다. 하지만 이후
+    // vertex data 와 attribute 를 자주 변경할 것이고
+    // 이러한 변화들이 광원 물체에 영향 주지 않게 하기 위해서
+    // 별도의 VAO 를 설정할 것이다.
+    unsigned int lightSourceVAO;
+    glGenVertexArrays(1, &lightSourceVAO);
+    glBindVertexArray(lightSourceVAO);
+    // we only need to bind to the VBO, the container’s VBO’s data
+    // already contains the data.
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // set the vertex attribute
+    glVertexAttribPointer(0,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
     #pragma endregion
 
     #pragma region Texture
