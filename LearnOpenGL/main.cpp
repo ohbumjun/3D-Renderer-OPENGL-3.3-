@@ -56,6 +56,8 @@ bool firstMouse = true;
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+size_t vertexInfoSize = 6;
+
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 int main()
@@ -159,7 +161,7 @@ int main()
     #pragma endregion
     
     #pragma region Vertex
-    unsigned int noLightVAO;
+    unsigned int cubeVAO;
     /*
         * VBO 란, vertex data 를 담은 opengl 상의 메모리이다.
         */
@@ -206,53 +208,97 @@ int main()
 
         // 6 개의 면, 36 개의 vertices
         // ex) glDrawArrays(GL_TRIANGLES, 0, 36);
+        // float vertices[] = {
+        //     -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        //     0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+        //     0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 
+        //     0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+        // 
+        //     -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 
+        //     -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        //     -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
+        //     0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+        // 
+        //     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 
+        //     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        //     -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, 
+        //     -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+        // 
+        //     -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 
+        //     -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+        //     -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        //     -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        // 
+        //     -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
+        //     -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 
+        //     0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+        // 
+        //     0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 
+        //     0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+        //     0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        // 
+        //     -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        //     0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+        //     0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 
+        //     0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+        // 
+        //     -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
+        //     -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        //     -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 
+        //     0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+        // 
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        //     -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 
+        //     -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f
+        // };
+
         float vertices[] = {
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-            0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
-            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 
-            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+            // positions             // normals 
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-            -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
-            0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
 
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, 
-            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-            -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, 
-            -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
-            -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 
-            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-            0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 
-            0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
-            0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
-            0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 
-            0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 
-            0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 
-            -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
         };
-
 
         unsigned int indices[] = {
             // note that we start from 0!
@@ -271,11 +317,11 @@ int main()
         * - 뿐만 아니라, EBO 정보도 같이 가지고 있는다.
         */
 
-        glGenVertexArrays(1, &noLightVAO);
+        glGenVertexArrays(1, &cubeVAO);
 
         // VAO 를 먼저 bind 시킨다.
         // 그 다음에 비로소 vbo, 속성을 configure 한다.
-        glBindVertexArray(noLightVAO);
+        glBindVertexArray(cubeVAO);
 
         /*
         * indexed buffer 를 위한 object :GL_ELEMENT_ARRAY_BUFFER
@@ -319,12 +365,11 @@ int main()
         // 어떻게 해석해야 할지 모른다. 따라서 vertex attribute 을
         // 통해서 이를 알려주어야 한다.
         glVertexAttribPointer(
-            0, // 어떤 vertex attribute 을 configure 하는 것인가
-            // ex) layout(location = 0) in vec3 aPos;
+            0, // 어떤 vertex attribute 을 configure 하는 것인가 // ex) layout(location = 0) in vec3 aPos;
             3,                 // vertex attribute 의 크기
             GL_FLOAT,          // 데이터의 type
             GL_FALSE,          // 정규화 여부
-            5 * sizeof(float), // 각 정점 데이터 사이의 간격
+            vertexInfoSize * sizeof(float), // 각 정점 데이터 사이의 간격
             (void *)0 // 메모리 상에서 data 가 시작하는 offset
         );
 
@@ -342,49 +387,18 @@ int main()
         //                       (void *)(3 * sizeof(float)));
         // glEnableVertexAttribArray(1);
 
-        // texture attribute
         glVertexAttribPointer(1,
-                              2,
+                              3,
                               GL_FLOAT,
                               GL_FALSE,
-                              5 * sizeof(float),
+                              vertexInfoSize * sizeof(float),
                               (void *)(3 * sizeof(float)));
 
         glEnableVertexAttribArray(1);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+        // glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0); // VAO unbind 시키기
     }   
-    #pragma endregion
-
-    #pragma region Light Shader
-
-    // 실제 광원에 해당하는 object 를 위한  VAO, attribute 생성
-    // 광원을 기존의 VAO 에 설정하여 그릴 수 있다. 하지만 이후 
-    // vertex data 와 attribute 를 자주 변경할 것이고
-    // 이러한 변화들이 광원 물체에 영향 주지 않게 하기 위해서
-    // 별도의 VAO 를 설정할 것이다.
-    unsigned int lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
-    // we only need to bind to the VBO, the container’s VBO’s data
-    // already contains the data.
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // set the vertex attribute
-    glVertexAttribPointer(0,
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          // 3 * sizeof(float),
-                          5 * sizeof(float),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-
-    lightShader.use();
-    lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-    lightShader.setVec3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
     #pragma endregion
 
     #pragma region Light Source Shader Setting
@@ -405,7 +419,7 @@ int main()
                           GL_FLOAT,
                           GL_FALSE,
                           // 3 * sizeof(float),
-                          5 * sizeof(float),
+                          vertexInfoSize * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
@@ -713,7 +727,7 @@ int main()
             glBindTexture(GL_TEXTURE_2D, texture2);
 
             // glBindVertexArray(VAO);
-            glBindVertexArray(lightVAO);
+            glBindVertexArray(cubeVAO);
 
             model = glm::rotate(model,
                              (float)glfwGetTime(),
@@ -757,10 +771,15 @@ int main()
 
             // 반드시 해당 uniform 에 값을 사용하기 전에
             // shader program 을 사용해야 한다.
-            lightShader.setFloat("mixValue", mixValue);
-           //  ourShader.setMat4("model", model);
+
+
+            lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+            lightShader.setVec3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+            // lightShader.setFloat("mixValue", mixValue);
+            //  ourShader.setMat4("model", model);
             lightShader.setMat4("view", view);
             lightShader.setMat4("projection", projection);
+            lightShader.setVec3f("lightPos", lightPos);
 
             for (unsigned int i = 0; i < 10; i++)
             {
@@ -778,6 +797,8 @@ int main()
         }
 
         {
+            // draw light source
+
             lightSourceShader.use();
             
             // draw the light cube object
@@ -813,6 +834,12 @@ int main()
         glfwSwapBuffers(window); // double buffering
         glfwPollEvents(); // event 가 발생했는지 계속해서 검사
     }
+
+     // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &lightSourceVAO);
+    glDeleteBuffers(1, &VBO);
 
     glfwTerminate(); // 모든 glfw 자원 지운다.
 
