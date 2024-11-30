@@ -159,7 +159,7 @@ int main()
     #pragma endregion
     
     #pragma region Vertex
-    unsigned int VAO;
+    unsigned int noLightVAO;
     /*
         * VBO 란, vertex data 를 담은 opengl 상의 메모리이다.
         */
@@ -271,11 +271,11 @@ int main()
         * - 뿐만 아니라, EBO 정보도 같이 가지고 있는다.
         */
 
-        glGenVertexArrays(1, &VAO);
+        glGenVertexArrays(1, &noLightVAO);
 
         // VAO 를 먼저 bind 시킨다.
         // 그 다음에 비로소 vbo, 속성을 configure 한다.
-        glBindVertexArray(VAO);
+        glBindVertexArray(noLightVAO);
 
         /*
         * indexed buffer 를 위한 object :GL_ELEMENT_ARRAY_BUFFER
@@ -376,7 +376,8 @@ int main()
                           3,
                           GL_FLOAT,
                           GL_FALSE,
-                          3 * sizeof(float),
+                          // 3 * sizeof(float),
+                          5 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
@@ -403,7 +404,8 @@ int main()
                           3,
                           GL_FLOAT,
                           GL_FALSE,
-                          3 * sizeof(float),
+                          // 3 * sizeof(float),
+                          5 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
@@ -690,82 +692,105 @@ int main()
         float timeValue = glfwGetTime();
         float mixValue = (sin(timeValue) / 2.0f) + 0.5f; //0  ~ 1
 
-        // shader program 을 사용한다.
-        // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
-        // 해당 shader program 을 사용하게 된다.
-        // glUseProgram(shaderProgram);
-        ourShader.use();
-
-        // 마찬가지로, 아래 texture 함수들도 shader program 사용 이후에 호출되어야 한다.
-        glActiveTexture(GL_TEXTURE0);  // activate texture unit first
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
-        glBindVertexArray(VAO);
-
         // model : local space -> world space 로 변환
         glm::mat4 model = glm::mat4(1.0f); 
-        model = glm::rotate(model,
-                         (float)glfwGetTime(),
-                         glm::vec3(0.5f, 1.0f, 0.0f)); // 비스듬한 축 회전
-
         glm::mat4 view;
-        // case 1) default camera
-        // view : world space -> view space 로 변환
-        // glm::mat4 view = glm::mat4(1.0f);
-
-        // note that we’re translating the scene in the reverse direction
-        // 즉, 카메라를 z 축 방향 -3이 된다는 것은, Scene 이 그만큼 우리 정면으로 가까워진다는 것 ?
-        // 왜냐면 카메라 이동 방향과 scene 의 movement 가 반대가 되는 개념이기 때문이다.
-        // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-        // case 2) camera rotate
-        // const float radius = 10.0f;
-        // float camX = sin(glfwGetTime()) * radius;
-        // float camZ = cos(glfwGetTime()) * radius;
-        // 
-        // // 실시간으로 camera 위치 변경. 단 바라보는 target 은 고정
-        // 
-        // view = glm::lookAt(glm::vec3(camX, 0.0, camZ),
-        //                    glm::vec3(0.0, 0.0, 0.0),
-        //                    glm::vec3(0.0, 1.0, 0.0));
-
-        //view = glm::lookAt(cameraPos, 
-        //    cameraPos + cameraFront,  // camera direction
-        //    cameraUp);
-        view = camera.GetViewMatrix();
-
         glm::mat4 projection;
-        projection = glm::perspective(glm::radians(camera.Zoom),
-                                      (float)SCR_WIDTH / (float)SCR_HEIGHT,
-                                      0.1f,
-                                      100.0f);
-        // projection = glm::perspective(
-        //     fov,
-        //     800.0f / 600.0f,
-        //     0.1f,    // near
-        //     100.0f // far
-        // );
 
-        // 반드시 해당 uniform 에 값을 사용하기 전에
-        // shader program 을 사용해야 한다.
-        ourShader.setFloat("mixValue", mixValue);
-       //  ourShader.setMat4("model", model);
-        ourShader.setMat4("view", view);
-        ourShader.setMat4("projection", projection);
 
-        for (unsigned int i = 0; i < 10; i++)
         {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(
-                                model,
-                                (float)glfwGetTime()  + glm::radians(angle),
-                                glm::vec3(1.0f, 0.3f, 0.5f)
-                        );
-            ourShader.setMat4("model", model);
+            // shader program 을 사용한다.
+            // 해당 함수 호출 이후, 모든 shader 와 rendering call 은
+            // 해당 shader program 을 사용하게 된다.
+            // glUseProgram(shaderProgram);
+            // ourShader.use();
+            lightShader.use();
+
+            // 마찬가지로, 아래 texture 함수들도 shader program 사용 이후에 호출되어야 한다.
+            glActiveTexture(GL_TEXTURE0);  // activate texture unit first
+            glBindTexture(GL_TEXTURE_2D, texture1);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, texture2);
+
+            // glBindVertexArray(VAO);
+            glBindVertexArray(lightVAO);
+
+            model = glm::rotate(model,
+                             (float)glfwGetTime(),
+                             glm::vec3(0.5f, 1.0f, 0.0f)); // 비스듬한 축 회전
+
+            // case 1) default camera
+            // view : world space -> view space 로 변환
+            // glm::mat4 view = glm::mat4(1.0f);
+
+            // note that we’re translating the scene in the reverse direction
+            // 즉, 카메라를 z 축 방향 -3이 된다는 것은, Scene 이 그만큼 우리 정면으로 가까워진다는 것 ?
+            // 왜냐면 카메라 이동 방향과 scene 의 movement 가 반대가 되는 개념이기 때문이다.
+            // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+            // case 2) camera rotate
+            // const float radius = 10.0f;
+            // float camX = sin(glfwGetTime()) * radius;
+            // float camZ = cos(glfwGetTime()) * radius;
+            // 
+            // // 실시간으로 camera 위치 변경. 단 바라보는 target 은 고정
+            // 
+            // view = glm::lookAt(glm::vec3(camX, 0.0, camZ),
+            //                    glm::vec3(0.0, 0.0, 0.0),
+            //                    glm::vec3(0.0, 1.0, 0.0));
+
+            //view = glm::lookAt(cameraPos, 
+            //    cameraPos + cameraFront,  // camera direction
+            //    cameraUp);
+            view = camera.GetViewMatrix();
+
+            projection = glm::perspective(glm::radians(camera.Zoom),
+                                          (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                          0.1f,
+                                          100.0f);
+            // projection = glm::perspective(
+            //     fov,
+            //     800.0f / 600.0f,
+            //     0.1f,    // near
+            //     100.0f // far
+            // );
+
+            // 반드시 해당 uniform 에 값을 사용하기 전에
+            // shader program 을 사용해야 한다.
+            lightShader.setFloat("mixValue", mixValue);
+           //  ourShader.setMat4("model", model);
+            lightShader.setMat4("view", view);
+            lightShader.setMat4("projection", projection);
+
+            for (unsigned int i = 0; i < 10; i++)
+            {
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, cubePositions[i]);
+                float angle = 20.0f * i;
+                model = glm::rotate(
+                                    model,
+                                    (float)glfwGetTime()  + glm::radians(angle),
+                                    glm::vec3(1.0f, 0.3f, 0.5f)
+                            );
+                lightShader.setMat4("model", model);
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+        }
+
+        {
+            lightSourceShader.use();
+            
+            // draw the light cube object
+            glBindVertexArray(lightSourceVAO);
+            
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, lightPos);
+            model = glm::scale(model, glm::vec3(0.2f));
+            
+            lightSourceShader.setMat4("model", model);
+            lightSourceShader.setMat4("view", view);
+            lightSourceShader.setMat4("projection", projection);
+            
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
@@ -782,7 +807,7 @@ int main()
         // );
 
         // glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // // check and call events and swap the buffers
         glfwSwapBuffers(window); // double buffering
