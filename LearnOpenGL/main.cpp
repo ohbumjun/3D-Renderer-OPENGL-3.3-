@@ -805,6 +805,12 @@ int main()
             // draw the light cube object
             glBindVertexArray(lightSourceVAO);
             
+             const float radius = 3.0f;
+            float lightSrcX = sin(glfwGetTime()) * radius;
+             lightPos.x = lightSrcX;
+            float lightSrcZ = cos(glfwGetTime()) * radius;
+            lightPos.z = lightSrcZ;
+
             model = glm::mat4(1.0f);
             model = glm::translate(model, lightPos);
             model = glm::scale(model, glm::vec3(0.2f));
