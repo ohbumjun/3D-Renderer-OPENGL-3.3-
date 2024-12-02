@@ -782,6 +782,22 @@ int main()
             lightShader.setMat4("projection", projection);
             lightShader.setVec3f("lightPos", lightPos);
 
+            lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+            lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+            lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+            lightShader.setFloat("material.shininess", 32.0f);
+
+            glm::vec3 lightColor;
+            lightColor.x = sin(glfwGetTime() * 2.0f);
+            lightColor.y = sin(glfwGetTime() * 0.7f);
+            lightColor.z = sin(glfwGetTime() * 1.3f);
+
+            glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+            glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+            lightShader.setVec3f("light.ambient", ambientColor);
+            lightShader.setVec3f("light.diffuse", diffuseColor);
+            lightShader.setVec3f("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
             for (unsigned int i = 0; i < 10; i++)
             {
                 glm::mat4 model = glm::mat4(1.0f);
