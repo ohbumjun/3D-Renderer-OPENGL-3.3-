@@ -775,6 +775,7 @@ int main()
 
             lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
             lightShader.setVec3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+            lightShader.setVec3f("viewPos", camera.Position);
             // lightShader.setFloat("mixValue", mixValue);
             //  ourShader.setMat4("model", model);
             lightShader.setMat4("view", view);

@@ -8,16 +8,19 @@ in vec3 Normal;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
-
+uniform vec3 viewPos;       // world 상의 camera position
 
 void main()
 {
+// 참고 : 현재 learning purpose 를 위해서 빛 계산을 모두 world space 상에서 진행하고 있다.
     float ambientStrength = 0.5;
+    float specularStrength = 0.5;
+    float shiness = 32; // 값이 높을 수록, specualr light 반사 정도가 더 정확해지고, 빛이 덜 scatter 된다.
     vec3 ambient = ambientStrength * lightColor;
 
     // pixel normal vector normalized
     vec3 norm = normalize(Normal);
-    // lightPos - FragPos : light -> frag 방향 벡터
+    // lightPos - FragPos : frag -> lightPos 방향 벡터
     vec3 lightDir = normalize(lightPos - FragPos);
 
     // dot(norm, lightDir) : 두 벡터의 내적 == cos(theta)
@@ -26,6 +29,13 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
-    vec3 result = (ambient + diffuse) * objectColor;
+    // Specular
+    vec3 viewDir = normalize(viewPos - FragPos); // pixel -> camera
+    // reflect 함수의 경우, 1번째 요소가 light source -> pixel 방향이기를 기대한다. 그래서 '-' 을 붙여준다.
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shiness);
+    vec3 specular = specularStrength * spec * lightColor;
+    
+    vec3 result = (ambient + diffuse + specular) * objectColor;
     FragColor = vec4(result, 1.0);
 }
