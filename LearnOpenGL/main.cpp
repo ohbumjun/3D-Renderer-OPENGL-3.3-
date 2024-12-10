@@ -53,10 +53,10 @@ float lastMouseX = 0.f, lastMouseY = 0.f; // store last pos
 bool firstMouse = true;
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 900;
 
-size_t vertexInfoSize = 6;
+size_t vertexInfoSize = 8;
 
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
@@ -69,7 +69,8 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow *window =
+        glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -89,7 +90,7 @@ int main()
     // tell OpenGL the size of the rendering window
     // 0,0 : lower left corner
     // 800, 600 : width, height
-    glViewport(0, 0 , 800, 600);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
     // 콜백함수 등록
     // > window resize
@@ -255,49 +256,94 @@ int main()
         //     -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f
         // };
 
+       // float vertices[] = {
+       //     // positions             // normals 
+       //     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+       //      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+       //      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+       //      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+       //     -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+       //     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+       // 
+       //     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+       //      0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+       //      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+       //      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+       //     -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+       //     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+       // 
+       //     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+       //     -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+       //     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+       //     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+       //     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+       //     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+       // 
+       //      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+       //      0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+       //      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+       //      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+       //      0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+       //      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+       // 
+       //     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+       //      0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+       //      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+       //      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+       //     -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+       //     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+       // 
+       //     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+       //      0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+       //      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+       //      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+       //     -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+       //     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+       // };
+
         float vertices[] = {
-            // positions             // normals 
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            // positions          // normals           // texture coords
+            -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f,
+            0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 0.0f,
+            0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 1.0f,
+            0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 1.0f,
+            -0.5f, 0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+            0.5f,  -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+            -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
 
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f,
+            -0.5f, 0.5f,  -0.5f, -1.0f, 0.0f,  0.0f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,  0.0f,  0.0f, 0.0f,
+            -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f,
 
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+            0.5f,  0.5f,  -0.5f, 1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+            0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+            0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+            0.5f,  -0.5f, 0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f, 1.0f,
+            0.5f,  -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  1.0f, 1.0f,
+            0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  1.0f, 0.0f,
+            0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  1.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f, 1.0f,
 
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+            -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+            0.5f,  0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+            -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+            -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f, 1.0f
         };
 
         unsigned int indices[] = {
@@ -316,7 +362,6 @@ int main()
         * - 이것만 bind 시키기만 하면 된다.
         * - 뿐만 아니라, EBO 정보도 같이 가지고 있는다.
         */
-
         glGenVertexArrays(1, &cubeVAO);
 
         // VAO 를 먼저 bind 시킨다.
@@ -386,7 +431,6 @@ int main()
         //     // color 정보는, vertex 정보 다음에 위치하므로 아래와 같은 offset 세팅
         //                       (void *)(3 * sizeof(float)));
         // glEnableVertexAttribArray(1);
-
         glVertexAttribPointer(1,
                               3,
                               GL_FLOAT,
@@ -395,6 +439,15 @@ int main()
                               (void *)(3 * sizeof(float)));
 
         glEnableVertexAttribArray(1);
+
+       glVertexAttribPointer(2,
+                              2,
+                              GL_FLOAT,
+                              GL_FALSE,
+                              vertexInfoSize * sizeof(float),
+                              (void *)(6 * sizeof(float)));
+
+        glEnableVertexAttribArray(2);
 
         // glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0); // VAO unbind 시키기
@@ -771,8 +824,6 @@ int main()
 
             // 반드시 해당 uniform 에 값을 사용하기 전에
             // shader program 을 사용해야 한다.
-
-
             lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
             lightShader.setVec3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
             lightShader.setVec3f("viewPos", camera.Position);
@@ -780,17 +831,28 @@ int main()
             //  ourShader.setMat4("model", model);
             lightShader.setMat4("view", view);
             lightShader.setMat4("projection", projection);
-            lightShader.setVec3f("lightPos", lightPos);
+            lightShader.setVec3f("light.position", lightPos);
+            // lightShader.setVec3f("light.direction", glm::vec3(- 0.2f,-1.0f,-0.3f));
 
-            lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-            lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-            lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+            lightShader.setFloat("light.constant", 1.0f);
+            lightShader.setFloat("light.linear", 0.09f);
+            lightShader.setFloat("light.quadratic", 0.032f);
+
+            // lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+            // lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+            lightShader.setInt("material.diffuse", 0); 
+            // lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+            lightShader.setInt("material.specular", 1); 
             lightShader.setFloat("material.shininess", 32.0f);
 
             glm::vec3 lightColor;
-            lightColor.x = sin(glfwGetTime() * 2.0f);
-            lightColor.y = sin(glfwGetTime() * 0.7f);
-            lightColor.z = sin(glfwGetTime() * 1.3f);
+            // lightColor.x = sin(glfwGetTime() * 2.0f);
+            // lightColor.y = sin(glfwGetTime() * 0.7f);
+            // lightColor.z = sin(glfwGetTime() * 1.3f);
+
+            lightColor.x = sin(2.0f);
+            lightColor.y = sin(0.7f);
+            lightColor.z = sin(1.3f);
 
             glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
             glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
@@ -805,7 +867,8 @@ int main()
                 float angle = 20.0f * i;
                 model = glm::rotate(
                                     model,
-                                    (float)glfwGetTime()  + glm::radians(angle),
+                                    // (float)glfwGetTime()  + glm::radians(angle),
+                                    glm::radians(angle),
                                     glm::vec3(1.0f, 0.3f, 0.5f)
                             );
                 lightShader.setMat4("model", model);

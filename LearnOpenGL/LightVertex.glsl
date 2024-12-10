@@ -2,6 +2,7 @@
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
+ layout (location = 2) in vec2 aTexCoords;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -9,6 +10,7 @@ uniform mat4 projection;
 
 out vec3 Normal;
 out vec3 FragPos;
+out vec2 TexCoords;
 
 void main()
 {
@@ -17,6 +19,8 @@ void main()
     // world pos of vertex 
     // - for light calculations in fragment shader
     FragPos = vec3(model * vec4(aPos, 1.0));
+
+    TexCoords = aTexCoords;
 
     // Normal 인 경우, non-uniform scale 일 경우, 그냥 L 을 곱하면 안된다. 
     // 1) L 의 역행렬을 취해주고
