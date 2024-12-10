@@ -831,8 +831,19 @@ int main()
             //  ourShader.setMat4("model", model);
             lightShader.setMat4("view", view);
             lightShader.setMat4("projection", projection);
-            lightShader.setVec3f("light.position", lightPos);
+            // lightShader.setVec3f("light.position", lightPos);
+            lightShader.setVec3f("light.position", camera.Position);
             // lightShader.setVec3f("light.direction", glm::vec3(- 0.2f,-1.0f,-0.3f));
+            lightShader.setVec3f("light.direction", camera.Front);
+            // angle 에 기반한 cost 값을 계산하여 넘겨준다
+            // 왜냐하면 fragment shader 에서는 light dir 와 spot dir 사이의
+            // dot product 를 계산하여, 이를 통해 spot light 의 영향을 계산하고
+            // dot product 는 angle 이 아니라, cos value 를 리턴하기 때문이다
+            // 우리는 cosine value 와 angle 을 직접 비교할 수 없다
+            // shader 상에서 angle 을 얻기 위해서는 dot product 결과에
+            // inverse cosine 를 취해야 한다. 그런데 이거는 비용이 발생하므로
+            // angle 을 넘겨주기 보다는, cosine value 를 넘겨주는 것이 더 효율적이다.
+            lightShader.setFloat("light.cutOff",glm::cos(glm::radians(12.5f)));
 
             lightShader.setFloat("light.constant", 1.0f);
             lightShader.setFloat("light.linear", 0.09f);
