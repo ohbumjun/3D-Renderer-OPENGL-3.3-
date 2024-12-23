@@ -38,6 +38,9 @@ SOURCE_GROUP("${CMAKE_SOURCE_DIR}/external/ImGuizmo" FILES ${THIRDPARTY_IMGUIZMO
 SET(THIRDPARTY_BOX2D)
 SOURCE_GROUP("${CMAKE_SOURCE_DIR}/external/Box2D/include" FILES ${THIRDPARTY_BOX2D})
 
+SET(THIRDPARTY_ASSIMP)
+SOURCE_GROUP("${CMAKE_SOURCE_DIR}/external/assimp" FILES ${THIRDPARTY_BOX2D})
+
 set(LEARN_OPENGL_INCLUDES
   # "${CMAKE_SOURCE_DIR}/BJGameEngine/src"
    "${CMAKE_SOURCE_DIR}/external/spdlog/include"
@@ -48,6 +51,7 @@ set(LEARN_OPENGL_INCLUDES
    "${CMAKE_SOURCE_DIR}/external/stb_image"
    "${CMAKE_SOURCE_DIR}/external/entt/include"
    "${CMAKE_SOURCE_DIR}/external/RapidJson"
+   "${CMAKE_SOURCE_DIR}/external/assimp"
   # "${CMAKE_SOURCE_DIR}/external/ImGuizmo"
   # "${CMAKE_SOURCE_DIR}/external/Box2D/include"
   # "${CMAKE_CURRENT_SOURCE_DIR}/public" 
@@ -67,6 +71,7 @@ add_executable(
     ${THIRDPARTY_RAPIDJSON}
     ${THIRDPARTY_IMGUIZMO}
     ${THIRDPARTY_BOX2D}
+    ${THIRDPARTY_ASSIMP}
 )
 
 target_compile_definitions(
