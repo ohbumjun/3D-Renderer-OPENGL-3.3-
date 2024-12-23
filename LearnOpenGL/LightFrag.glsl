@@ -5,8 +5,8 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 
-uniform vec3 objectColor;
-uniform vec3 lightColor;
+// uniform vec3 objectColor;
+// uniform vec3 lightColor;
 uniform vec3 viewPos;       // world 상의 camera position
 
 struct DirLight {
@@ -33,6 +33,10 @@ struct SpotLight {
 
     // 점점 smooth edge 가 되도록 하는 값
     float outerCutOff;
+
+    float constant;
+    float linear;
+    float quadratic;
 
     // Light 의 각 색상
     // 일반적으로 ambient light 는 intensity 가 낮다.
@@ -77,15 +81,19 @@ vec3 CalSpotLight(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir)
     // lightPos - FragPos : frag -> lightPos 방향 벡터
     vec3 fragToLightDir = normalize(light.position - FragPos);
 
-    // 해당 fragment 가 spot light 범위 안에 존재하는지 확인한다.
-    float theta = dot(fragToLightDir, normalize(-light.direction));
+    float diff = max(dot(norm, fragToLightDir), 0.0);
+
+    vec3 reflectDir = reflect(-fragToLightDir, norm);
+    
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0),  material.shininess);
 
      // attenuation
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
     
+    // 해당 fragment 가 spot light 범위 안에 존재하는지 확인한다.
     // spotlight intensity
-    float theta = dot(lightDir, normalize(-light.direction)); 
+    float theta = dot(fragToLightDir, normalize(-light.direction)); 
     float epsilon = light.cutOff - light.outerCutOff; // smooth edge
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
     
@@ -175,11 +183,14 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos); // pixel -> camera
 
     // phase 1: Directional lighting
-    vec3 result = CalcDirLight(dirLight, norm, FragPos, viewDir);
+    vec3 result = CalcDirLight(dirLight, norm, viewDir);
 
     // phase 2: Point lights
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
+    {
+        // result += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
         result += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
+    }
 
     // phase 3: Spot light
     result += CalSpotLight(spotLight, norm, FragPos, viewDir);

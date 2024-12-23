@@ -830,11 +830,9 @@ int main()
 
             // 반드시 해당 uniform 에 값을 사용하기 전에
             // shader program 을 사용해야 한다.
-            lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+            // lightShader.setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
             lightShader.setVec3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
             lightShader.setVec3f("viewPos", camera.Position);
-            // lightShader.setFloat("mixValue", mixValue);
-            //  ourShader.setMat4("model", model);
 
             glm::vec3 lightColor;
             // lightColor.x = sin(glfwGetTime() * 2.0f);
@@ -851,6 +849,17 @@ int main()
             lightShader.setMat4("view", view);
             lightShader.setMat4("projection", projection);
 
+            { 
+                // Material
+
+                // lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+                // lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+                lightShader.setInt("material.diffuse", 0);
+                // lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+                lightShader.setInt("material.specular", 1);
+                lightShader.setFloat("material.shininess", 32.0f);
+            }
+
             {
                 // Dir Light
                 lightShader.setVec3f("dirLight.direction", dirLightDir);
@@ -865,6 +874,11 @@ int main()
                 lightShader.setVec3f("spotLight.position", camera.Position);
                 lightShader.setVec3f("spotLight.direction", camera.Front);
 
+                lightShader.setVec3f("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+                lightShader.setVec3f("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+                lightShader.setVec3f("spotLight.specular",
+                                     glm::vec3(1.0f, 1.0f, 1.0f));
+
                 // angle 에 기반한 cost 값을 계산하여 넘겨준다
                 // 왜냐하면 fragment shader 에서는 light dir 와 spot dir 사이의
                 // dot product 를 계산하여, 이를 통해 spot light 의 영향을 계산하고
@@ -874,39 +888,90 @@ int main()
                 // inverse cosine 를 취해야 한다. 그런데 이거는 비용이 발생하므로
                 // angle 을 넘겨주기 보다는, cosine value 를 넘겨주는 것이 더 효율적이다.
                 lightShader.setFloat("spotLight.cutOff",
-                                     glm::cos(glm::radians(12.5f)));
+                                        glm::cos(glm::radians(12.5f)));
+                lightShader.setFloat("spotLight.outerCutOff",
+                                        glm::cos(glm::radians(15.0f)));     
+                lightShader.setFloat("spotLight.constant", 1.0f);
+                lightShader.setFloat("spotLight.linear", 0.09f);
+                lightShader.setFloat("spotLight.quadratic", 0.032f);
 
-                lightShader.setVec3f("dirLight.ambient", ambientColor);
-                lightShader.setVec3f("dirLight.diffuse", diffuseColor);
-                lightShader.setVec3f("dirLight.specular",
-                                     glm::vec3(1.0f, 1.0f, 1.0f));
             }
 
             {
-                // Point Light
-
-                lightShader.setVec3f("pointLights[0].ambient", ambientColor);
-                lightShader.setVec3f("pointLights[0].diffuse", diffuseColor);
+                // point light 1
+                lightShader.setVec3f("pointLights[0].position",
+                                       pointLightPositions[0]);
+                lightShader.setVec3f("pointLights[0].ambient",
+                                     glm::vec3(0.05f,
+                                       0.05f,
+                                       0.05f));
+                lightShader.setVec3f("pointLights[0].diffuse",
+                                     glm::vec3(0.8f,
+                                       0.8f,
+                                       0.8f));
                 lightShader.setVec3f("pointLights[0].specular",
-                                     glm::vec3(1.0f, 1.0f, 1.0f));
-
+                                     glm::vec3(1.0f,
+                                       1.0f,
+                                       1.0f));
                 lightShader.setFloat("pointLights[0].constant", 1.0f);
                 lightShader.setFloat("pointLights[0].linear", 0.09f);
                 lightShader.setFloat("pointLights[0].quadratic", 0.032f);
-
-                for (size_t i = 0; i < 4; ++i)
-                {
-                    std::string pointLightPos = "pointLights[" + std::to_string(i) + "].position";
-                    lightShader.setVec3f(pointLightPos, pointLightPositions[i]);
-                }
+                // point light 2
+                lightShader.setVec3f("pointLights[1].position",
+                                       pointLightPositions[1]);
+                lightShader.setVec3f("pointLights[1].ambient",
+                                     glm::vec3(0.05f,
+                                       0.05f,
+                                       0.05f));
+                lightShader.setVec3f("pointLights[1].diffuse",
+                                     glm::vec3(0.8f,
+                                       0.8f,
+                                       0.8f));
+                lightShader.setVec3f("pointLights[1].specular",
+                                     glm::vec3(1.0f,
+                                       1.0f,
+                                       1.0f));
+                lightShader.setFloat("pointLights[1].constant", 1.0f);
+                lightShader.setFloat("pointLights[1].linear", 0.09f);
+                lightShader.setFloat("pointLights[1].quadratic", 0.032f);
+                // point light 3
+                lightShader.setVec3f("pointLights[2].position",
+                                       pointLightPositions[2]);
+                lightShader.setVec3f("pointLights[2].ambient",
+                                     glm::vec3(0.05f,
+                                       0.05f,
+                                       0.05f));
+                lightShader.setVec3f("pointLights[2].diffuse",
+                                       glm::vec3(0.8f,
+                                       0.8f,
+                                       0.8f));
+                lightShader.setVec3f("pointLights[2].specular",
+                                       glm::vec3(1.0f,
+                                       1.0f,
+                                       1.0f));
+                lightShader.setFloat("pointLights[2].constant", 1.0f);
+                lightShader.setFloat("pointLights[2].linear", 0.09f);
+                lightShader.setFloat("pointLights[2].quadratic", 0.032f);
+                // point light 4
+                lightShader.setVec3f("pointLights[3].position",
+                                       pointLightPositions[3]);
+                lightShader.setVec3f("pointLights[3].ambient",
+                                       glm::vec3(0.05f,
+                                       0.05f,
+                                       0.05f));
+                lightShader.setVec3f("pointLights[3].diffuse",
+                                       glm::vec3(0.8f,
+                                       0.8f,
+                                       0.8f));
+                lightShader.setVec3f("pointLights[3].specular",
+                                       glm::vec3(1.0f,
+                                       1.0f,
+                                       1.0f));
+                lightShader.setFloat("pointLights[3].constant", 1.0f);
+                lightShader.setFloat("pointLights[3].linear", 0.09f);
+                lightShader.setFloat("pointLights[3].quadratic", 0.032f);
             }
 
-            // lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-            // lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-            lightShader.setInt("material.diffuse", 0); 
-            // lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-            lightShader.setInt("material.specular", 1); 
-            lightShader.setFloat("material.shininess", 32.0f);
 
             for (unsigned int i = 0; i < 10; i++)
             {
@@ -925,10 +990,10 @@ int main()
         }
 
         {
-            // draw light source
+            // draw directional  light source
 
             lightSourceShader.use();
-            lightSourceShader.setMat4("view", view);
+
             // draw the light cube object
             glBindVertexArray(lightSourceVAO);
             
@@ -947,6 +1012,19 @@ int main()
             lightSourceShader.setMat4("projection", projection);
             
             glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        {
+            // draw point lights
+            for (unsigned int i = 0; i < 4; i++)
+            {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, pointLightPositions[i]);
+                model = glm::scale(model,
+                                   glm::vec3(0.2f)); // Make it a smaller cube
+                lightSourceShader.setMat4("model", model);
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
         }
 
         // wire frame mode 로 그리기
