@@ -58,7 +58,8 @@ const unsigned int SCR_HEIGHT = 900;
 
 size_t vertexInfoSize = 8;
 
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 dirLightDir(-0.2f, -1.f, -03.f);
+glm::vec3 dirLightPos(0.f, 5.f, 0.f);
 
 int main()
 {
@@ -743,6 +744,11 @@ int main()
                                  glm::vec3(1.5f, 0.2f, -1.5f),
                                  glm::vec3(-1.3f, 1.0f, -1.5f)};
 
+    glm::vec3 pointLightPositions[] = {glm::vec3(0.7f, 0.2f, 2.0f),
+                                       glm::vec3(2.3f, -3.3f, -4.0f),
+                                       glm::vec3(-4.0f, 2.0f, -12.0f),
+                                       glm::vec3(0.0f, 0.0f, -3.0f)};
+
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -829,32 +835,6 @@ int main()
             lightShader.setVec3f("viewPos", camera.Position);
             // lightShader.setFloat("mixValue", mixValue);
             //  ourShader.setMat4("model", model);
-            lightShader.setMat4("view", view);
-            lightShader.setMat4("projection", projection);
-            // lightShader.setVec3f("light.position", lightPos);
-            lightShader.setVec3f("light.position", camera.Position);
-            // lightShader.setVec3f("light.direction", glm::vec3(- 0.2f,-1.0f,-0.3f));
-            lightShader.setVec3f("light.direction", camera.Front);
-            // angle 에 기반한 cost 값을 계산하여 넘겨준다
-            // 왜냐하면 fragment shader 에서는 light dir 와 spot dir 사이의
-            // dot product 를 계산하여, 이를 통해 spot light 의 영향을 계산하고
-            // dot product 는 angle 이 아니라, cos value 를 리턴하기 때문이다
-            // 우리는 cosine value 와 angle 을 직접 비교할 수 없다
-            // shader 상에서 angle 을 얻기 위해서는 dot product 결과에
-            // inverse cosine 를 취해야 한다. 그런데 이거는 비용이 발생하므로
-            // angle 을 넘겨주기 보다는, cosine value 를 넘겨주는 것이 더 효율적이다.
-            lightShader.setFloat("light.cutOff",glm::cos(glm::radians(12.5f)));
-
-            lightShader.setFloat("light.constant", 1.0f);
-            lightShader.setFloat("light.linear", 0.09f);
-            lightShader.setFloat("light.quadratic", 0.032f);
-
-            // lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-            // lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-            lightShader.setInt("material.diffuse", 0); 
-            // lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-            lightShader.setInt("material.specular", 1); 
-            lightShader.setFloat("material.shininess", 32.0f);
 
             glm::vec3 lightColor;
             // lightColor.x = sin(glfwGetTime() * 2.0f);
@@ -867,9 +847,66 @@ int main()
 
             glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
             glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-            lightShader.setVec3f("light.ambient", ambientColor);
-            lightShader.setVec3f("light.diffuse", diffuseColor);
-            lightShader.setVec3f("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+            lightShader.setMat4("view", view);
+            lightShader.setMat4("projection", projection);
+
+            {
+                // Dir Light
+                lightShader.setVec3f("dirLight.direction", dirLightDir);
+                lightShader.setVec3f("dirLight.ambient", ambientColor);
+                lightShader.setVec3f("dirLight.diffuse", diffuseColor);
+                lightShader.setVec3f("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+            }
+
+            {
+                // Spot Light (Flash Light)
+                // lightShader.setVec3f("light.position", lightPos);
+                lightShader.setVec3f("spotLight.position", camera.Position);
+                lightShader.setVec3f("spotLight.direction", camera.Front);
+
+                // angle 에 기반한 cost 값을 계산하여 넘겨준다
+                // 왜냐하면 fragment shader 에서는 light dir 와 spot dir 사이의
+                // dot product 를 계산하여, 이를 통해 spot light 의 영향을 계산하고
+                // dot product 는 angle 이 아니라, cos value 를 리턴하기 때문이다
+                // 우리는 cosine value 와 angle 을 직접 비교할 수 없다
+                // shader 상에서 angle 을 얻기 위해서는 dot product 결과에
+                // inverse cosine 를 취해야 한다. 그런데 이거는 비용이 발생하므로
+                // angle 을 넘겨주기 보다는, cosine value 를 넘겨주는 것이 더 효율적이다.
+                lightShader.setFloat("spotLight.cutOff",
+                                     glm::cos(glm::radians(12.5f)));
+
+                lightShader.setVec3f("dirLight.ambient", ambientColor);
+                lightShader.setVec3f("dirLight.diffuse", diffuseColor);
+                lightShader.setVec3f("dirLight.specular",
+                                     glm::vec3(1.0f, 1.0f, 1.0f));
+            }
+
+            {
+                // Point Light
+
+                lightShader.setVec3f("pointLights[0].ambient", ambientColor);
+                lightShader.setVec3f("pointLights[0].diffuse", diffuseColor);
+                lightShader.setVec3f("pointLights[0].specular",
+                                     glm::vec3(1.0f, 1.0f, 1.0f));
+
+                lightShader.setFloat("pointLights[0].constant", 1.0f);
+                lightShader.setFloat("pointLights[0].linear", 0.09f);
+                lightShader.setFloat("pointLights[0].quadratic", 0.032f);
+
+                for (size_t i = 0; i < 4; ++i)
+                {
+                    std::string pointLightPos = "pointLights[" + std::to_string(i) + "].position";
+                    lightShader.setVec3f(pointLightPos, pointLightPositions[i]);
+                }
+            }
+
+            // lightShader.setVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+            // lightShader.setVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+            lightShader.setInt("material.diffuse", 0); 
+            // lightShader.setVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+            lightShader.setInt("material.specular", 1); 
+            lightShader.setFloat("material.shininess", 32.0f);
 
             for (unsigned int i = 0; i < 10; i++)
             {
@@ -891,18 +928,18 @@ int main()
             // draw light source
 
             lightSourceShader.use();
-            
+            lightSourceShader.setMat4("view", view);
             // draw the light cube object
             glBindVertexArray(lightSourceVAO);
             
              const float radius = 3.0f;
             float lightSrcX = sin(glfwGetTime()) * radius;
-             lightPos.x = lightSrcX;
+             dirLightPos.x = lightSrcX;
             float lightSrcZ = cos(glfwGetTime()) * radius;
-            lightPos.z = lightSrcZ;
+             dirLightPos.z = lightSrcZ;
 
             model = glm::mat4(1.0f);
-            model = glm::translate(model, lightPos);
+             model = glm::translate(model, dirLightPos);
             model = glm::scale(model, glm::vec3(0.2f));
             
             lightSourceShader.setMat4("model", model);
