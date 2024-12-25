@@ -16,7 +16,7 @@ unsigned int TextureFromFile(const char *path,
 class Model
 {
 public:
-    Model(char *path) // file path
+    Model(const char *path) // file path
     {
         loadModel(path); // assimp import
     }

@@ -39,7 +39,7 @@ SET(THIRDPARTY_BOX2D)
 SOURCE_GROUP("${CMAKE_SOURCE_DIR}/external/Box2D/include" FILES ${THIRDPARTY_BOX2D})
 
 SET(THIRDPARTY_ASSIMP)
-SOURCE_GROUP("${CMAKE_SOURCE_DIR}/external/assimp" FILES ${THIRDPARTY_BOX2D})
+SOURCE_GROUP("${CMAKE_SOURCE_DIR}/external/assimp" FILES ${THIRDPARTY_ASSIMP})
 
 set(LEARN_OPENGL_INCLUDES
   # "${CMAKE_SOURCE_DIR}/BJGameEngine/src"
@@ -56,7 +56,8 @@ set(LEARN_OPENGL_INCLUDES
   # "${CMAKE_SOURCE_DIR}/external/Box2D/include"
   # "${CMAKE_CURRENT_SOURCE_DIR}/public" 
    )
-   
+
+
 add_executable(
     ${LEARN_OPENGL_NAME} 
 
@@ -81,6 +82,7 @@ target_compile_definitions(
     GLFW_INCLUDE_NONE
     _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
     RESOURCE_ROOT="${CMAKE_SOURCE_DIR}/BJResource/"
+    PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
     # DLL
     HZ_DYNAMIC_LINK
     )
@@ -110,7 +112,8 @@ target_link_libraries(
     opengl32.lib
     glfw
     spdlog
-    "${CMAKE_SOURCE_DIR}/external/assimp/assimpd.lib"
+    # project name 이 아니라면, 바로 lib 을 link 한다.
+   "${CMAKE_SOURCE_DIR}/external/assimp/assimpd.lib"
     # -fsanitize=address
     )
 
@@ -128,6 +131,15 @@ set_target_properties(${LEARN_OPENGL_NAME}
     PROPERTIES 
     RUNTIME_OUTPUT_DIRECTORY
     ${RUNTIME_OUTPUT_DIR}
+)
+
+add_custom_command(
+    TARGET ${LEARN_OPENGL_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy 
+   "${CMAKE_SOURCE_DIR}/external/assimp/assimpd.dll"
+    "${RUNTIME_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}"
+    COMMENT "Copying data file: ${CMAKE_SOURCE_DIR}/external/assimp/assimpd.dll to ${RUNTIME_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}"
 )
 
 # apply clang-tidy

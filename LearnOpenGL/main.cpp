@@ -1,9 +1,11 @@
 ﻿#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include "FileSystem.h"
 #include <iostream>
 #include <stb_image.h>
 #include "Shader.h"
 #include "Camera.h"
+#include "Model.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -56,12 +58,12 @@ bool firstMouse = true;
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
 
-size_t vertexInfoSize = 8;
+size_t vertexInfoSize = 8; //
 
 glm::vec3 dirLightDir(-0.2f, -1.f, -03.f);
 glm::vec3 dirLightPos(0.f, 5.f, 0.f);
 
-int main()
+int main(int argc, char *argv[])
 {
     #pragma region OpenGL 초기화
     // GLFW 초기화
@@ -733,6 +735,29 @@ int main()
 
     #pragma endregion
 
+    #pragma region SampleModel
+
+    
+    // build and compile shaders
+    // -------------------------
+     vrxShaderPath =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\ModelVertex."
+        "glsl";
+
+    fragShaderPath =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\ModelFrag."
+        "glsl";
+
+    Shader sampleModelShader("1.model_loading.vs", "1.model_loading.fs");
+
+    // load models
+    // -----------
+    std::string modelPath = 
+        FileSystem::getPath("BJResource/Resources/backpack/backpack.obj");
+   Model sampleModel(modelPath.c_str());
+
+    #pragma endregion
+
     glm::vec3 cubePositions[] = {glm::vec3(0.0f, 0.0f, 0.0f),
                                  glm::vec3(2.0f, 5.0f, -15.0f),
                                  glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -973,7 +998,7 @@ int main()
             }
 
 
-            for (unsigned int i = 0; i < 10; i++)
+            for (unsigned int i = 0; i < 5; i++)
             {
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, cubePositions[i]);
@@ -1025,6 +1050,25 @@ int main()
                 lightSourceShader.setMat4("model", model);
                 glDrawArrays(GL_TRIANGLES, 0, 36);
             }
+        }
+
+        {
+            // Draw Model
+            sampleModelShader.use();
+            model = glm::translate(
+                model,
+                glm::vec3(
+                    0.0f,
+                    0.0f,
+                    0.0f)); // translate it down so it's at the center of the scene
+            model = glm::scale(
+                model,
+                glm::vec3(
+                    1.0f,
+                    1.0f,
+                    1.0f)); // it's a bit too big for our scene, so scale it down
+            ourShader.setMat4("model", model);
+            // sampleModel.Draw(ourShader);
         }
 
         // wire frame mode 로 그리기
