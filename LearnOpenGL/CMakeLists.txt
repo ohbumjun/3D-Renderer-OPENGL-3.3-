@@ -110,6 +110,7 @@ target_link_libraries(
     opengl32.lib
     glfw
     spdlog
+    "${CMAKE_SOURCE_DIR}/external/assimp/assimpd.lib"
     # -fsanitize=address
     )
 

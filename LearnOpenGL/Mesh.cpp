@@ -14,6 +14,8 @@ void Mesh::Draw(Shader &shader)
 {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
+
+    // 하나의 single mesh 에 대해서 여러 개의 texture 가 사용될 수 있다.
     for (unsigned int i = 0; i < textures.size(); i++)
     {
         glActiveTexture(GL_TEXTURE0 + i); // activate texture unit first
@@ -28,6 +30,7 @@ void Mesh::Draw(Shader &shader)
         else if (name == "texture_specular")
             number = std::to_string(specularNr++);
 
+        // Material 구조체에 있는 shader 변수에 값을 넣어준다.
         shader.setFloat(("material." + name + number).c_str(), i);
 
         glBindTexture(GL_TEXTURE_2D, textures[i].id);

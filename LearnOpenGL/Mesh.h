@@ -1,19 +1,9 @@
 #pragma once
 
-#include <fstream>
-#include <glad/glad.h> // include glad to get the required OpenGL headers
-#include <iostream>
-#include <sstream>
 #include <string>
-#include <cassert>
 #include "Shader.h"
+#include "stb_image.h"
 #include <vector>
-
-// math
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 
 struct Vertex
 {
@@ -30,6 +20,7 @@ struct Texture
 {
     unsigned int id;
     std::string type; // Texture ¿Ã∏ß
+    std::string path;      // store path of texture to compare with other textures
 };
 
 class Mesh
