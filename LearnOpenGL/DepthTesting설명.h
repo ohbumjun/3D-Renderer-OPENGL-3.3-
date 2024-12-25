@@ -25,3 +25,24 @@ depth buffer 값은 빠르게 증가한다.
 반면 0.5 ~ 1 로 갈 때는, 실제 z pos 값이 크게 증가해도
 depth buffer 값은 느리게 증가한다.
 */
+
+/*
+* >> Z Fighting
+- 2개의 물체가 거의 같은 z pos 에 있을 때, 둘 중 어느 것이 앞에 있는지
+판단하기 어려워서 계속해서 depth buffer 값이 바뀌는 현상
+그로 인해 이상하게 계속 버벅거리게 나온다
+
+즉, 누가 depth buffer 상에서 top 에 있는가가 계속 바뀌는 것이다.
+
+>> 예방 방법
+high precision depth buffer 를 사용한다
+- 대부분의 depth buffer 는 24 bit 이다.
+- 오늘날 gpu 는 32 bit dpeth buffer 를 사용한다.
+즉, 정확도를 더 높여줄 수 있다
+
+즉, 32 bit 가 같은 범위의 값들도 더 많은 단위로 나눠서 표현가능하다
+그러면 24 bit 에서는 실제는 z pos 가 달라도, 같은 depth buffer 값으로 
+추정될 때, 32 bit 에서는 더 세밀한 표현이 가능하여
+서로 다른 depth buffer 값으로 나타날 수 있다.
+이를 통해 z fighting 을 방지할 수 있다.
+*/
