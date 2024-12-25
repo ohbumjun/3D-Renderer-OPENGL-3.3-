@@ -147,6 +147,13 @@ int main(int argc, char *argv[])
         "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\ScreenShaderFrag.glsl";
 
     Shader screenShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+
+    vrxShaderPath = "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\SkyBoxVertex.glsl";
+
+    fragShaderPath = "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\SkyBoxFrag.glsl";
+
+    Shader skyBoxShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+
     #pragma endregion
 
     #pragma region Vertex
@@ -176,13 +183,21 @@ int main(int argc, char *argv[])
         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
         -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
 
+   // float planeVertices[] = {
+   //     // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+   //     5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, 5.0f,
+   //     0.0f, 0.0f,  -5.0f, -0.5f, -5.0f, 0.0f,  2.0f,
+   // 
+   //     5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, -5.0f,
+   //     0.0f, 2.0f,  5.0f,  -0.5f, -5.0f, 2.0f,  2.0f
+   // };
+
     float planeVertices[] = {
         // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
-        5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, 5.0f,
-        0.0f, 0.0f,  -5.0f, -0.5f, -5.0f, 0.0f,  2.0f,
-
-        5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, -5.0f,
-        0.0f, 2.0f,  5.0f,  -0.5f, -5.0f, 2.0f,  2.0f};
+        -5.0f, -0.5f, 5.0f,  0.0f, 0.0f, 5.0f,  -0.5f, 5.0f,  2.0f, 0.0f,
+        5.0f,  -0.5f, -5.0f, 2.0f, 2.0f, 5.0f,  -0.5f, -5.0f, 2.0f, 2.0f,
+        -5.0f, -0.5f, -5.0f, 0.0f, 2.0f, -5.0f, -0.5f, 5.0f,  0.0f, 0.0f,
+    };
 
     float quadVertices[] = {
         // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -201,6 +216,26 @@ int main(int argc, char *argv[])
 
         0.0f, 0.5f, 0.0f, 0.0f,  0.0f, 1.0f, -0.5f, 0.0f,
         1.0f, 1.0f, 1.0f, 0.5f,  0.0f, 1.0f, 0.0f};
+
+     float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
+        1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+
+        -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
+        -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
+
+        1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
+
+        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
+        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
 
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
@@ -305,6 +340,23 @@ int main(int argc, char *argv[])
                           4 * sizeof(float),
                           (void *)(2 * sizeof(float)));
 
+    // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(skyboxVertices),
+                 &skyboxVertices,
+                 GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          3 * sizeof(float),
+                          (void *)0);
 
     #pragma endregion
 
@@ -336,10 +388,13 @@ int main(int argc, char *argv[])
 
     // glUseProgram(shaderProgram); // don’t forget to activate the shader first!
     shader.use();
-
     // uniform sampler2D texture1 에 세팅
     // glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
     shader.setInt("texture1", 0); // or with shader class
+    
+    // skyBox Mapping
+    skyBoxShader.use();
+    skyBoxShader.setInt("skybox", 0);
 
     #pragma region STENCIL TEST
 
@@ -480,8 +535,6 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     // glDepthFunc(GL_ALWAYS); // always pass the depth test (same effect as glDisable(GL_DEPTH_TEST))
-    
-
     /*
     >> 옵션
     GL_ALWAYS The depth test always passes.
@@ -899,13 +952,13 @@ glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         // -----
         processInput(window);
 
-        
+        glStencilMask(0x00); 
+
+        // (만약 new frame 을 사용하는 경우)
         // render (NewFrame Buffer 에 먼저 그린다)
         // bind to framebuffer and draw scene as we normally would to color texture
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-        glEnable(
-            GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
-
+        // glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        // glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
         // render
         // ------
@@ -934,29 +987,8 @@ glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         shaderSingleColor.setMat4("view", view);
         shaderSingleColor.setMat4("projection", projection);
 
-        // phase 1) floor 및 다른 대상은 stencil 적용을 하지 않을 것이므로 평소처럼 그린다.
-        // 이를 위해 stencil 값에 기록을 안하도록 하기 위해 아래와 같은 mask 설정을 한다.
-        
         {
             shader.use();
-            glStencilMask(0x00);
-            glBindVertexArray(planeVAO);
-            glBindTexture(GL_TEXTURE_2D, floorTexture);
-            shader.setMat4("model", glm::mat4(1.0f));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-            glBindVertexArray(0);
-        }
-
-        {
-            shader.use();
-
-            // phase 2) Stencil Buffer 에 '1' 을 write 한다.
-            glStencilFunc(
-                GL_ALWAYS, // 항상 stencil pass
-                1, // stencil buffer 에 1 을 write 한다.
-                0xFF // stencil value 에서 8 bit 값 모두 사용
-            );       // all fragments pass the stencil test
-            glStencilMask(0xFF);
 
             glBindVertexArray(cubeVAO);
             glActiveTexture(GL_TEXTURE0);
@@ -972,58 +1004,18 @@ glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
             model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        
-        {
-            // phase 3) container 를 다시 그린다. 
-            // - stencil 은 update 되지 않도록 한다. 현재 해당 object 가 그려진 pixel 위치에는 '1' 이 그려져 있다.
-            // - border 측에 single color 를 일단 무조건 그려야 한다. depth disable (설명 참고)
-            glStencilFunc(
-                GL_NOTEQUAL, // 2번째 인자가 '1' ->  stencil 값이 '1' 이 아닌 곳에만 그리는 것이다.
-                1, 
-                0xFF);
-            glStencilMask(0x00); // stencil 값에 새로운 값이 써지지 않도록 한다.
-            glDisable(GL_DEPTH_TEST);
-            shaderSingleColor.use();
 
-            float scale = 1.1f;
-            // cubes
-            glBindVertexArray(cubeVAO);
-            glBindTexture(GL_TEXTURE_2D, cubeTexture);
-
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-            model = glm::scale(model, glm::vec3(scale, scale, scale));
-            shaderSingleColor.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-            model = glm::scale(model, glm::vec3(scale, scale, scale));
-            shaderSingleColor.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            
+            glBindVertexArray(planeVAO);
+            glBindTexture(GL_TEXTURE_2D, floorTexture);
+            shader.setMat4("model", glm::mat4(1.0f));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
         }
 
         {
-            // phase 4) normalize rendering state
-            // stencil buffer 에 값을 쓰는 것을 방지한다.
-            glStencilMask(0xFF);
-
-            glStencilFunc(
-                GL_ALWAYS, // 모든 pixel 이 stencil test 통과
-                0, // GL_ALWAYS 가 아니라면 기존 stencil buffer 와 현재 0 값을 비교
-                // 그런데 항상 통과하게 했으므로, 이제 이 2번재 인자는 무의미. 
-                // 그러나 제공은 해야 하므로 0 으로 제공
-                0xFF // stencil value 중에서 모든 8 bite 값이 모두 비교에 사용된다.
-            );
-            glEnable(GL_DEPTH_TEST);
-        }
-
-        {
-            // draw vegetation
+            // draw window
             simpleBlendingDiscard.use();
-            glStencilMask(0x00);
             glBindVertexArray(transparentVAO);
             glBindTexture(GL_TEXTURE_2D, blendingTexture);
             
@@ -1047,43 +1039,67 @@ glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
                 simpleBlendingDiscard.setMat4("model", model);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
-
-            // for (unsigned int i = 0; i < vegetation.size(); i++)
-            // {
-            //     model = glm::mat4(1.0f);
-            //     model = glm::translate(model, vegetation[i]);
-            //     simpleBlendingDiscard.setMat4("model", model);
-            //     glDrawArrays(GL_TRIANGLES, 0, 6);
-            // }
         }
 
+        
         {
-            // default framebuffer 으로 다시 rendering
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            // disable depth test so screen-space quad
-            //  isn't discarded due to depth test.
-            glDisable(
-                GL_DEPTH_TEST); 
-
-            // clear all relevant buffers
-            glClearColor(
-                1.0f,
-                1.0f,
-                1.0f,
-                1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            screenShader.use();
-
-            glBindVertexArray(quadVAO);
-
-            glBindTexture(
-                GL_TEXTURE_2D,
-                textureColorbuffer); // use the color attachment texture as the texture of the quad plane
-            
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            // 값이 같거나 작으면 pass 시킨다
+            // 자. 이게 없으면 아예 sky box 가 안그려진다.
+            // sky box vertex shader 코드 참고 : z 값이 '1' 이 된다.
+            glDepthFunc(GL_LEQUAL);
+        
+            // sky box 를 가장 마지막에 그린다.
+            skyBoxShader.use();
+        
+            // remove translation from the view matrix
+            // 왜 ? sky box 가 항상 player 를 중심위치로 두고 싶다
+            // 이에 따라 player 움직임과 관계없이 sky box 가 더 가까워지거나 하지
+            // 않기 때문이다. 단 회전으로 인한 변화는 적용하여 sky box 를 둘러볼 수 있도록 한다.
+            // 그 방법은 4x4 중에서 3x3 (L|t 에서 L 부분)만 취하면 된다.
+            view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+        
+            skyBoxShader.setMat4("view", view);
+            skyBoxShader.setMat4("projection", projection);
+        
+            // skybox cube
+            glBindVertexArray(skyboxVAO);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
+        
+            // set depth function back to default
+            glDepthFunc(GL_LESS);
         }
+
+
+        // {
+        //     // default framebuffer 으로 다시 rendering
+        //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // 
+        //     // disable depth test so screen-space quad
+            //  isn't discarded due to depth test.
+        //     glDisable(
+        //         GL_DEPTH_TEST); 
+        // 
+        //     // clear all relevant buffers
+        //     glClearColor(
+        //         1.0f,
+        //         1.0f,
+        //         1.0f,
+        //         1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+        //     glClear(GL_COLOR_BUFFER_BIT);
+        // 
+        //     screenShader.use();
+        // 
+        //     glBindVertexArray(quadVAO);
+        // 
+        //     glBindTexture(
+        //         GL_TEXTURE_2D,
+        //         textureColorbuffer); // use the color attachment texture as the texture of the quad plane
+        //     
+        //     glDrawArrays(GL_TRIANGLES, 0, 6);
+        // }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -1096,10 +1112,12 @@ glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteVertexArrays(1, &planeVAO);
     glDeleteVertexArrays(1, &quadVAO);
+    glDeleteVertexArrays(1, &skyboxVAO);
 
     glDeleteBuffers(1, &cubeVBO);
     glDeleteBuffers(1, &planeVBO);
     glDeleteBuffers(1, &quadVBO);
+    glDeleteBuffers(1, &skyboxVBO);
     
     glDeleteRenderbuffers(1, &rbo);
     glDeleteFramebuffers(1, &framebuffer);
