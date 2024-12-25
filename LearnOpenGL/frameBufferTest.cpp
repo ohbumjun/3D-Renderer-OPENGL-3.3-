@@ -134,15 +134,21 @@ int main(int argc, char *argv[])
     fragShaderPath = "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\SingleColorFrag.glsl";
 
     Shader shaderSingleColor(vrxShaderPath.c_str(), fragShaderPath.c_str());
-
+   
     fragShaderPath =
-        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\SimpleBlendingDiscard."
-        "glsl";
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\SimpleBlendingDiscard.glsl";
 
     Shader simpleBlendingDiscard(vrxShaderPath.c_str(), fragShaderPath.c_str());
+   
+    vrxShaderPath = 
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\ScreenShaderVertex.glsl";
 
+    fragShaderPath = 
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\ScreenShaderFrag.glsl";
+
+    Shader screenShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
     #pragma endregion
-    
+
     #pragma region Vertex
     float cubeVertices[] = {
         // positions          // texture Coords
@@ -177,6 +183,16 @@ int main(int argc, char *argv[])
 
         5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, -5.0f,
         0.0f, 2.0f,  5.0f,  -0.5f, -5.0f, 2.0f,  2.0f};
+
+    float quadVertices[] = {
+        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -1.0f, 1.0f, 0.0f, 1.0f,  -1.0f, -1.0f,
+        0.0f,  0.0f, 1.0f, -1.0f, 1.0f,  0.0f,
+
+        -1.0f, 1.0f, 0.0f, 1.0f,  1.0f,  -1.0f,
+        1.0f,  0.0f, 1.0f, 1.0f,  1.0f,  1.0f
+    };
 
     float transparentVertices[] = {
         // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
@@ -263,6 +279,32 @@ int main(int argc, char *argv[])
                           5 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
+
+     // screen quad VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(quadVertices),
+                 &quadVertices,
+                 GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          4 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          4 * sizeof(float),
+                          (void *)(2 * sizeof(float)));
+
 
     #pragma endregion
 
@@ -625,6 +667,158 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
 
     #pragma endregion
 
+    #pragma region FACE CULL
+
+    /*
+    >> OPENGL 기준으로,  front face 는 반시계 방향, back face 는 시계 방향
+    사용자가 삼각형을 보려면 정점 순서가 반시계 방향이어야 한다.
+    
+    >> 렌더링 과정
+    정점 셰이더 실행 이후, rasterization 단계에서 렌더링 순서가 결정된다.
+    뷰어의 시점에서 볼 때 삼각형의 면이 어떻게 보이는지를 고려하여 렌더링 순서가 결정됩니다.
+
+    >> 전면 삼각형과 후면 삼각형:
+    뷰어가 바라보는 쪽의 삼각형은 우리가 정의한 반시계 방향 순서대로 정상적으로 렌더링됩니다.
+    반면, 큐브의 뒷면에 위치한 삼각형은 뷰어의 시점에서 시계 방향으로 렌더링됩니다.
+    즉, 우리가 반시계 방향으로 정의했지만, 뷰어의 시점에서는 반대로 렌더링되는 것입니다.
+    
+    >> 백 페이스 컬링(Back-face Culling):
+    이러한 현상을 이용하여 숨겨진 면을 제거할 수 있습니다. 아예 그리지 않는 것이다.
+    뷰어의 시점에서 시계 방향으로 렌더링되는 삼각형(후면 삼각형)은 컬링(제거)함으로써 렌더링 성능을 향상
+    
+    >> 결론:
+    정점 순서를 반시계 방향으로 정의하면, 뷰어의 시점에서 전면 삼각형은 반시계 방향으로, 후면 삼각형은 시계 방향으로 렌더링됩니다.
+    이를 이용하여 후면 삼각형을 컬링하여 렌더링 성능을 향상시킬 수 있습니다
+    */
+
+    glEnable(GL_CULL_FACE);
+
+    #pragma endregion
+
+    #pragma region RENDERBUFFER OBJECT
+
+    /*
+    >> 기본 개념
+렌더버퍼 객체(Renderbuffer Object)에 대하여
+
+> 특징:
+
+텍스처 이미지와 유사하게 바이트, 정수, 픽셀 등의 데이터를 저장하는 버퍼입니다.
+직접 읽을 수 없습니다.
+OpenGL에서 메모리 최적화를 수행하여 텍스처보다 성능적으로 유리할 수 있습니다.
+장점:
+
+렌더링 데이터를 텍스처 포맷으로 변환하지 않고 직접 저장하여 쓰기 성능이 빠릅니다.
+버퍼 간의 데이터 복사가 빠릅니다.
+
+> 단점:
+
+직접 데이터를 읽을 수 없습니다.
+glReadPixels 함수를 사용하여 간접적으로 읽을 수 있지만 느립니다.
+활용 예:
+
+glfwSwapBuffers 함수와 유사하게 더블 버퍼링을 구현할 수 있습니다.
+렌더링 결과를 렌더버퍼에 쓰고, 두 개의 렌더버퍼를 교체하여 화면에 출력합니다.
+
+> 요약:
+
+렌더버퍼 객체는 렌더링 데이터를 빠르게 쓰고 저장할 수 있는 메모리 버퍼입니다. 
+직접 읽을 수 없지만, 렌더링 작업과 버퍼 교환 등의 작업에서 높은 성능을 보여줍니다.
+
+렌더버퍼 객체는 텍스처와 비슷하지만, 직접 읽을 수 없고 쓰기 성능이 뛰어납니다.
+렌더링 결과를 빠르게 저장하고 교환하는 데 적합합니다.
+    */
+
+    /*
+    * >> Frame Buffer 사용 방법
+    • We have to attach at least one buffer (color, depth or stencil buffer).
+    • There should be at least one color attachment.
+    - 이때 attachment 란, frame buffer 에서 buffer 로 사용되는 memory location 이다.
+    ex) image 같은 것.
+    보통 attachment 를 사용할 때는 2가지 옵션을 사용한다 : texture 혹은 render buffer object
+    • All attachments should be complete as well (reserved memory).
+    • Each buffer should have the same number of samples
+    */
+    
+    // framebuffer configuration
+    unsigned int framebuffer;
+    glGenFramebuffers(1, &framebuffer); // create frame buffer object
+
+    // 해당 Bind 를 호출한 이후, 모든 framebuffer operation 은 해당 framebuffer 에 대해 이루어진다.
+    // 참고 : 해당 frame buffer 를 read, write target 으로 bind 할 수 있다.
+    //      옵션 -> GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER
+    //      GL_READ_FRAMEBUFFER : glReadPixels 를 통해 ㅏㄱㅄ을 읽어올 수 있다.
+    //      GL_DRAW_FRAMEBUFFER : rendering 을 위한 target 으로 사용된다.
+    //      보통 GL_FRAMEBUFFER 를 사용. 위 두 옵션을 모두 제공
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer); // bind it as framebuffer
+
+    // 
+     // create a color attachment texture (texture for framebuffer)
+    unsigned int textureColorbuffer;
+    glGenTextures(1, &textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_RGB,
+                 SCR_WIDTH, // screen 크기만큼 설정
+                 SCR_HEIGHT,
+                 0,
+                 GL_RGB,
+                 GL_UNSIGNED_BYTE,
+                 NULL // Texture Data 에 null. 아직 데이터 채워지지 않음. 여기에 render 하면서 채워줄 거임
+    );
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // texture 를 생성하면 실제 frame buffer 에 attach 해야 한다.
+    // 참고 : 현재 texture 를 attach 하듯이, depth, stencil texture 도 attack 가능하다.
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, // target frame buffer type ex) draw, read, both
+
+        // type of attachment
+        // 현재 우리는 color attachment 를 하는 중. 맨 끝에 '0' 이라는 것을 보면
+        // 알 수 있듯이, 우리는 1 개 보다 더 많은 color attachment 를 할 수 있다.
+        GL_COLOR_ATTACHMENT0, 
+                                    
+        GL_TEXTURE_2D, // type of texture
+        textureColorbuffer, // actual texture to attach
+        0); // mipmapping level
+    
+    // 자. 이제 해당 frame buffer 에 depth, stencil buffer 정보도 attach 하고 싶다
+    // 1) 일반 texture 가 아니라 최적화된 ? 메모리인 render buffer object
+    // 2) 32 bit 안에 24, 8 나눠서 각각 depth, stencil buffer 로 사용
+    // create a renderbuffer object for depth and stencil attachment (samping x)
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+
+    // create a depth and stencil renderbuffer object
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        // depth, stencil attachment 를 위한 format (32 중 24 bit depth, 8 bit stencil)
+        GL_DEPTH24_STENCIL8,
+        SCR_WIDTH,
+        SCR_HEIGHT); // use a single renderbuffer object for both a depth AND stencil buffer.
+    
+    // attach the renderbuffer to the framebuffer object
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                              GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER,
+                              rbo); // now actually attach it
+
+
+    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    // framebuffer 생성이 정상적으로 되었는지 확인
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+       std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+   
+    // rendering 이 default framebuffer 에 되도록 다시 설정
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    #pragma endregion
+
     // transparent vegetation locations
     // --------------------------------
     std::vector<glm::vec3> vegetation{glm::vec3(-1.5f, 0.0f, -0.48f),
@@ -632,6 +826,11 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
                                  glm::vec3(0.0f, 0.0f, 0.7f),
                                  glm::vec3(-0.3f, 0.0f, -2.3f),
                                  glm::vec3(0.5f, 0.0f, -0.6f)};
+
+    // 1) scene 을 new frame buffer 에 render 한다.
+    // 2) bind to default framebuffer
+    // 3) 전체 screen 크기의 quad 를 그린다.
+    // 단, new frame buffer 의 color buffer 를 texture 로 사용하여 그린다.
 
     // render loop
     // -----------
@@ -646,6 +845,14 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
         // input
         // -----
         processInput(window);
+
+        
+        // render (NewFrame Buffer 에 먼저 그린다)
+        // bind to framebuffer and draw scene as we normally would to color texture
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glEnable(
+            GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
 
         // render
         // ------
@@ -761,7 +968,7 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
         }
 
         {
-            // vegetation
+            // draw vegetation
             simpleBlendingDiscard.use();
             glStencilMask(0x00);
             glBindVertexArray(transparentVAO);
@@ -797,6 +1004,34 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
             // }
         }
 
+        {
+            // default framebuffer 으로 다시 rendering
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            // disable depth test so screen-space quad
+            //  isn't discarded due to depth test.
+            glDisable(
+                GL_DEPTH_TEST); 
+
+            // clear all relevant buffers
+            glClearColor(
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            screenShader.use();
+
+            glBindVertexArray(quadVAO);
+
+            glBindTexture(
+                GL_TEXTURE_2D,
+                textureColorbuffer); // use the color attachment texture as the texture of the quad plane
+            
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -807,9 +1042,14 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteVertexArrays(1, &planeVAO);
+    glDeleteVertexArrays(1, &quadVAO);
 
     glDeleteBuffers(1, &cubeVBO);
     glDeleteBuffers(1, &planeVBO);
+    glDeleteBuffers(1, &quadVBO);
+    
+    glDeleteRenderbuffers(1, &rbo);
+    glDeleteFramebuffers(1, &framebuffer);
 
     glfwTerminate(); // 모든 glfw 자원 지운다.
 
