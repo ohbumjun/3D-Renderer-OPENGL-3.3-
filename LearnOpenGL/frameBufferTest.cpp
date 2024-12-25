@@ -388,9 +388,7 @@ int main(int argc, char *argv[])
 
     // glUseProgram(shaderProgram); // don’t forget to activate the shader first!
     shader.use();
-    // uniform sampler2D texture1 에 세팅
-    // glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
-    shader.setInt("texture1", 0); // or with shader class
+    shader.setInt("skybox", 0); // 
     
     // skyBox Mapping
     skyBoxShader.use();
@@ -976,6 +974,7 @@ glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
                              100.0f);
 
         shader.use();
+        shader.setVec3f("cameraPos", camera.Position);
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
