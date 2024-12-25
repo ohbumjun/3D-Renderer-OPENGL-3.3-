@@ -1,6 +1,7 @@
 ﻿#include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <stb_image.h>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,6 +18,8 @@
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
+unsigned int loadTexture(const char *path);
+unsigned int loadCubemap(std::vector<std::string> faces);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -80,6 +83,11 @@ int main()
     std::string fragShaderPath = FileSystem::getPath("LearnOpenGL/8.red.glsl");
     Shader shaderRed(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/ModelVertex.glsl");
+    fragShaderPath = FileSystem::getPath("LearnOpenGL/FragCoordFrag.glsl");
+    Shader modelVertexShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/advanced_glsl.glsl");
     fragShaderPath = FileSystem::getPath("LearnOpenGL/8.green.glsl");
     Shader shaderGreen(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
@@ -88,6 +96,158 @@ int main()
 
     fragShaderPath = FileSystem::getPath("LearnOpenGL/8.yellow.glsl");
     Shader shaderYellow(vrxShaderPath.c_str(), fragShaderPath.c_str());
+    // cube VAO
+    unsigned int textureCubeVAO, textureCubeVBO;
+    float textureCubeVertices[] = {
+        // positions          // normals           // texture coords
+        -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f,
+        0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 1.0f,
+        0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 1.0f,
+        -0.5f, 0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f,
+    
+        -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+        0.5f,  -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+        -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+    
+        -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f, 0.5f,  -0.5f, -1.0f, 0.0f,  0.0f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f,
+    
+        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        0.5f,  0.5f,  -0.5f, 1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        0.5f,  -0.5f, 0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+    
+        -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f, 1.0f,
+        0.5f,  -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  1.0f, 1.0f,
+        0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  1.0f, 0.0f,
+        0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f, 1.0f,
+    
+        -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+        0.5f,  0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+    };
+    
+    unsigned int indices[] = {
+        // note that we start from 0!
+        0,
+        1,
+        3, // first triangle
+        1,
+        2,
+        3 // second triangle
+    };
+    
+    /*
+    * VAO
+    * - 속성 ~ VBO configure 정보를 한번에 담는 object
+    * - 이것만 bind 시키기만 하면 된다.
+    * - 뿐만 아니라, EBO 정보도 같이 가지고 있는다.
+    */
+    glGenVertexArrays(1, &textureCubeVAO);
+    
+    // VAO 를 먼저 bind 시킨다.
+    // 그 다음에 비로소 vbo, 속성을 configure 한다.
+    glBindVertexArray(textureCubeVAO);
+    
+    /*
+    * indexed buffer 를 위한 object :GL_ELEMENT_ARRAY_BUFFER
+    */
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    sizeof(indices),
+                    indices,
+                    GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &textureCubeVBO);
+    
+    // Opengl 은 여러 type 의 buffer object 를 가지고 있다.
+    // 그리고 'vetex buffer object' 의 type 이 GL_ARRAY_BUFFER 이다.
+    // opengl 은, 서로 다른 type의 여러 개 buffer 를 bind 할 수 있게 해준다.
+    glBindBuffer(GL_ARRAY_BUFFER, textureCubeVBO);
+    
+    // 해당 VBO 메모리 공간에, 현재 vertices 의 데이터를 복사한다.
+    glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(textureCubeVertices),
+                 textureCubeVertices,
+                    /*
+                * 그래픽 카드가 우리가 제공한 데이터를 어떤식으로 다룰지를 결정한다.
+                *
+                * > GL_STATIC_DRAW : data 는 한번 set, 여러 번 사용됨
+                * > GL_DYNAMIC_DRAW : data 는 여러 번 set, 여러 번 사용됨
+                * > GL_STREAM_DRAW : data 는 한번 set, 정말 적게 사용됨
+                *
+                * 우리가 현재 넘겨주는 정점 정보는 , 변하지 않고, 여러번 사용된다.
+                * 만약 자주 변하는 정보라면 GL_DYNAMIC_DRAW 을 사용하여
+                * Opengl 이 빠르게 쓸 수 있는 메모리 공간으로 데이터를 위치시킬 수 있게
+                * 해야 한다.
+                */
+                    GL_STATIC_DRAW);
+    
+    // shader 을 준비하는 것만으로는 부족하다
+    // vertex shader 는, 아직 메모리 상의 vertex data 를
+    // 어떻게 해석해야 할지 모른다. 따라서 vertex attribute 을
+    // 통해서 이를 알려주어야 한다.
+    glVertexAttribPointer(
+        0, // 어떤 vertex attribute 을 configure 하는 것인가 // ex) layout(location = 0) in vec3 aPos;
+        3,                 // vertex attribute 의 크기
+        GL_FLOAT,          // 데이터의 type
+        GL_FALSE,          // 정규화 여부
+        8 * sizeof(float), // 각 정점 데이터 사이의 간격
+        (void *)0 // 메모리 상에서 data 가 시작하는 offset
+    );
+    
+    // 해당 속성을 enable 시켜야 한다.
+    // vertex 속성들은, 기본적으로 disable 되어 있다.
+    glEnableVertexAttribArray(0);
+    
+    // color attribute
+    // glVertexAttribPointer(1,
+    //                       3,
+    //                       GL_FLOAT,
+    //                       GL_FALSE,
+    //                       8 * sizeof(float),
+    //     // color 정보는, vertex 정보 다음에 위치하므로 아래와 같은 offset 세팅
+    //                       (void *)(3 * sizeof(float)));
+    // glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,
+                            3,
+                            GL_FLOAT,
+                            GL_FALSE,
+                            8 * sizeof(float),
+                            (void *)(3 * sizeof(float)));
+    
+    glEnableVertexAttribArray(1);
+    
+    glVertexAttribPointer(2,
+                            2,
+                            GL_FLOAT,
+                            GL_FALSE,
+                            8 * sizeof(float),
+                            (void *)(6 * sizeof(float)));
+    
+    glEnableVertexAttribArray(2);
+    
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0); // VAO unbind 시키기
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -128,6 +288,11 @@ int main()
                           GL_FALSE,
                           3 * sizeof(float),
                           (void *)0);
+
+    unsigned int cubeTexture = loadTexture(
+        FileSystem::getPath("BJResource/marble.jpg").c_str());
+    unsigned int grassTexture = loadTexture(
+        FileSystem::getPath("BJResource/grass.png").c_str());
 
     // configure a uniform buffer object
     // ---------------------------------
@@ -174,7 +339,9 @@ int main()
                     glm::value_ptr(projection));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    modelVertexShader.use();
+    modelVertexShader.setInt("frontTexture", 0); 
+    modelVertexShader.setInt("backTexture", 1); 
 
     // render loop
     // -----------
@@ -195,24 +362,54 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
-        glm::mat4 view = camera.GetViewMatrix();
-        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        glBufferSubData(GL_UNIFORM_BUFFER,
-                        sizeof(glm::mat4),
-                        sizeof(glm::mat4),
-                        glm::value_ptr(view));
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        {
+            modelVertexShader.use();
+            
+            glActiveTexture(GL_TEXTURE0); 
+            glBindTexture(GL_TEXTURE_2D, cubeTexture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, grassTexture);
 
-        // draw 4 cubes
-        // RED
-        glBindVertexArray(cubeVAO);
-        shaderRed.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model,
-                               glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
-        shaderRed.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(textureCubeVAO);
+
+            glm::mat4 model = glm::mat4(1.0f);
+            glm::mat4 view = camera.GetViewMatrix();
+            glm::mat4 projection =
+                glm::perspective(glm::radians(camera.Zoom),
+                                    (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                    0.1f,
+                                    100.0f);
+            model = glm::translate(model,
+                               glm::vec3(-0.f, 0.f, 0.0f)); // move top-left
+
+            modelVertexShader.setMat4("model", model);
+            modelVertexShader.setMat4("projection", projection);
+            modelVertexShader.setMat4("view", view);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        {
+            // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
+            glm::mat4 view = camera.GetViewMatrix();
+            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+            glBufferSubData(GL_UNIFORM_BUFFER,
+                            sizeof(glm::mat4),
+                            sizeof(glm::mat4),
+                            glm::value_ptr(view));
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            // draw 4 cubes
+            // RED
+            // glBindVertexArray(cubeVAO);
+            // shaderRed.use();
+            // glm::mat4 model = glm::mat4(1.0f);
+            // model =
+            //     glm::translate(model,
+            //                    glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+            // shaderRed.setMat4("model", model);
+            // glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         //// GREEN
         //shaderGreen.use();
@@ -302,4 +499,53 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
     lastY = ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+unsigned int loadTexture(char const *path)
+{
+     unsigned int textureID;
+     glGenTextures(1, &textureID);
+
+     int width, height, nrComponents;
+     unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+     if (data)
+     {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D,
+                     0,
+                     format,
+                     width,
+                     height,
+                     0,
+                     format,
+                     GL_UNSIGNED_BYTE,
+                     data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D,
+                        GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+     }
+     else
+     {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+     }
+
+     return textureID;
 }
