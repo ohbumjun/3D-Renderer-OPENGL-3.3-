@@ -10,10 +10,14 @@ uniform samplerCube skybox;
 
 void main()
 {    
+	float ratio = 1.00 / 1.52;
+
     // camera -> 물체의 pixel 위치 (즉, 카메라에서 물체를 바라보는 방향)
     vec3 I = normalize(Position - cameraPos);
+
 	// 반사 vector 
-	vec3 R = reflect(I, normalize(Normal));
+	vec3 R = refract(I, normalize(Normal), ratio);
+
 	// 해당 반사 벡터를 texture coordinate 로 사용하여 skybox 에서 색상을 가져옴
 	FragColor = vec4(texture(skybox, R).rgb, 1.0);
 }
