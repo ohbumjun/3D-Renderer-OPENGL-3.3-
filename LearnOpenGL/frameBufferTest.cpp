@@ -33,8 +33,8 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 unsigned int loadTexture(const char *path);
-
-// // Camera 의 World Pos
+unsigned int loadCubemap(std::vector<std::string> faces);
+    // // Camera 의 World Pos
 // glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 // // Camer Direction
 // glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -320,6 +320,17 @@ int main(int argc, char *argv[])
         loadTexture(FileSystem::getPath("BJResource/grass.png").c_str());
     unsigned int blendingTexture =
         loadTexture(FileSystem::getPath("BJResource/window.png").c_str());
+
+    std::vector<std::string> faces
+    {  FileSystem::getPath("BJResource/Resources/skybox/right.jpg"), 
+        FileSystem::getPath("BJResource/Resources/skybox/left.jpg"), 
+        FileSystem::getPath("BJResource/Resources/skybox/top.jpg"), 
+        FileSystem::getPath("BJResource/Resources/skybox/bottom.jpg"), 
+        FileSystem::getPath("BJResource/Resources/skybox/front.jpg"), 
+        FileSystem::getPath("BJResource/Resources/skybox/back.jpg")
+    };
+
+    unsigned int cubemapTexture = loadCubemap(faces);
 
     #pragma endregion
 
@@ -819,6 +830,48 @@ glfwSwapBuffers 함수와 유사하게 더블 버퍼링을 구현할 수 있습�
 
     #pragma endregion
 
+    #pragma region CUBEMAP
+
+    /*
+    >> CubeMap 생성 방식
+- 6개의 texture 를 각 면에 대해서 만들어야 한다.
+ex) unsigned int textureID;
+glGenTextures(1, &textureID);
+glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+>> CubeMap 6개 면 texture 각 생성
+- glTexImage2D 함수를 사용하여 각 면에 대한 texture 를 생성한다.
+- 이때, 어떤 면에 대한 것을 생성하는지에 대한 인자도 넘겨줘야 한다.
+GL_TEXTURE_CUBE_MAP_POSITIVE_X Right
+GL_TEXTURE_CUBE_MAP_NEGATIVE_X Left
+GL_TEXTURE_CUBE_MAP_POSITIVE_Y Top
+GL_TEXTURE_CUBE_MAP_NEGATIVE_Y Bottom
+GL_TEXTURE_CUBE_MAP_POSITIVE_Z Back
+GL_TEXTURE_CUBE_MAP_NEGATIVE_Z Front
+
+ex) 
+int width, height, nrChannels;
+unsigned char *data;
+for(unsigned int i = 0; i < textures_faces.size(); i++)
+{
+data = stbi_load(textures_faces[i].c_str(), &width, &height,
+&nrChannels, 0);
+glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width,
+height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+>> 다른 Texture 처럼 Wrap, Filter 설정 
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+
+    */
+
+    #pragma endregion
+
     // transparent vegetation locations
     // --------------------------------
     std::vector<glm::vec3> vegetation{glm::vec3(-1.5f, 0.0f, -0.48f),
@@ -1196,5 +1249,46 @@ unsigned int loadTexture(char const *path)
         stbi_image_free(data);
      }
 
+     return textureID;
+}
+
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+     unsigned int textureID;
+     glGenTextures(1, &textureID);
+     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+     int width, height, nrChannels;
+
+     for (unsigned int i = 0; i < faces.size(); i++)
+     {
+        unsigned char *data =
+            stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                         0,
+                         GL_RGB,
+                         width,
+                         height,
+                         0,
+                         GL_RGB,
+                         GL_UNSIGNED_BYTE,
+                         data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap failed to load at path: " << faces[i]
+                      << std::endl;
+            stbi_image_free(data);
+        }
+     }
+
+     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
      return textureID;
 }
