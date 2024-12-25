@@ -748,7 +748,7 @@ int main(int argc, char *argv[])
         "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\ModelFrag."
         "glsl";
 
-    Shader sampleModelShader("1.model_loading.vs", "1.model_loading.fs");
+    Shader sampleModelShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
     // load models
     // -----------
@@ -1067,8 +1067,12 @@ int main(int argc, char *argv[])
                     1.0f,
                     1.0f,
                     1.0f)); // it's a bit too big for our scene, so scale it down
-            ourShader.setMat4("model", model);
-            // sampleModel.Draw(ourShader);
+
+            sampleModelShader.setMat4("model", model);
+            sampleModelShader.setMat4("view", view);
+            sampleModelShader.setMat4("projection", projection);
+
+            sampleModel.Draw(sampleModelShader);
         }
 
         // wire frame mode 로 그리기
