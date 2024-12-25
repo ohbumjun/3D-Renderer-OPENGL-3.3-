@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stb_image.h>
 #include "Shader.h"
+#include <map>
 #include "Camera.h"
 #include "Model.h"
 
@@ -275,6 +276,9 @@ int main(int argc, char *argv[])
         FileSystem::getPath("BJResource/metal.png").c_str());
     unsigned int grassTexture =
         loadTexture(FileSystem::getPath("BJResource/grass.png").c_str());
+    unsigned int blendingTexture =
+        loadTexture(FileSystem::getPath("BJResource/window.png").c_str());
+
     #pragma endregion
 
     // glUseProgram(shaderProgram); // don’t forget to activate the shader first!
@@ -575,6 +579,52 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
 
     #pragma endregion
 
+    #pragma region BLEND
+
+    /*
+    >> Options
+    GL_ZERO Factor is equal to 0.
+    GL_ONE Factor is equal to 1.
+    GL_SRC_COLOR Factor is equal to the source color vector C¯
+    source.
+    GL_ONE_MINUS_SRC_COLOR Factor is equal to 1 minus the source color vector: 1−C¯
+    source.
+    GL_DST_COLOR Factor is equal to the destination color vector C¯
+    destination
+    GL_ONE_MINUS_DST_COLOR Factor is equal to 1 minus the destination color vector: 1−C¯
+    destination.
+    GL_SRC_ALPHA
+    Factor is equal to the al pha component of the source color vector
+    C¯
+    source.
+    GL_ONE_MINUS_SRC_ALPHA Factor is equal to 1−al pha of the source color vector C¯
+    source.
+    GL_DST_ALPHA
+    Factor is equal to the al pha component of the destination color vector
+    C¯
+    destination.
+    GL_ONE_MINUS_DST_ALPHA Factor is equal to 1−al pha of the destination color vector C¯
+    destination.
+    GL_CONSTANT_COLOR Factor is equal to the constant color vector C¯
+    constant.
+    GL_ONE_MINUS_CONSTANT_COLOR Factor is equal to 1 - the constant color vector C¯
+    constant.
+    GL_CONSTANT_ALPHA
+    Factor is equal to the al pha component of the constant color vector
+    C¯
+    constant.
+    GL_ONE_MINUS_CONSTANT_ALPHA Factor is equal to 1−al pha of the constant color vector C¯
+    constant.
+    */
+
+    // ex)  C¯result = C¯ source ∗Fsource + C¯ destination ∗Fdestination
+    glEnable(GL_BLEND);
+
+    // ex) src * alpha + dest * (1 - alpha)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    #pragma endregion
+
     // transparent vegetation locations
     // --------------------------------
     std::vector<glm::vec3> vegetation{glm::vec3(-1.5f, 0.0f, -0.48f),
@@ -715,14 +765,36 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
             simpleBlendingDiscard.use();
             glStencilMask(0x00);
             glBindVertexArray(transparentVAO);
-            glBindTexture(GL_TEXTURE_2D, grassTexture);
+            glBindTexture(GL_TEXTURE_2D, blendingTexture);
+            
+             // sort the transparent windows before rendering
+             // (카메라 기준, 뒤에 있는 것부터 그려내기 위함이다)
+            // ---------------------------------------------
+            std::map<float, glm::vec3> sorted;
             for (unsigned int i = 0; i < vegetation.size(); i++)
             {
+                float distance = glm::length(camera.Position - vegetation[i]);
+                sorted[distance] = vegetation[i];
+            }
+
+            for (std::map<float, glm::vec3>::reverse_iterator it =
+                     sorted.rbegin();
+                 it != sorted.rend();
+                 ++it)
+            {
                 model = glm::mat4(1.0f);
-                model = glm::translate(model, vegetation[i]);
+                model = glm::translate(model, it->second);
                 simpleBlendingDiscard.setMat4("model", model);
                 glDrawArrays(GL_TRIANGLES, 0, 6);
             }
+
+            // for (unsigned int i = 0; i < vegetation.size(); i++)
+            // {
+            //     model = glm::mat4(1.0f);
+            //     model = glm::translate(model, vegetation[i]);
+            //     simpleBlendingDiscard.setMat4("model", model);
+            //     glDrawArrays(GL_TRIANGLES, 0, 6);
+            // }
         }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
