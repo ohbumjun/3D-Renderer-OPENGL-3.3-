@@ -10,7 +10,7 @@ unsigned int TextureFromFile(const char *path,
     filename = directory + '/' + filename;
 
     unsigned int textureID;
-    glGenTextures(1, &textureID);
+    glGenTextures(1, &textureID);//
 
     int width, height, nrComponents;
     unsigned char *data =
