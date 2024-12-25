@@ -134,6 +134,12 @@ int main(int argc, char *argv[])
 
     Shader shaderSingleColor(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
+    fragShaderPath =
+        "D:\\OpenGL\\LearnOpenGL\\LearnOpenGLSrc\\LearnOpenGL\\SimpleBlendingDiscard."
+        "glsl";
+
+    Shader simpleBlendingDiscard(vrxShaderPath.c_str(), fragShaderPath.c_str());
+
     #pragma endregion
     
     #pragma region Vertex
@@ -162,6 +168,7 @@ int main(int argc, char *argv[])
         -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
         -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
+
     float planeVertices[] = {
         // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
         5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, 5.0f,
@@ -169,6 +176,15 @@ int main(int argc, char *argv[])
 
         5.0f, -0.5f, 5.0f,  2.0f,  0.0f,  -5.0f, -0.5f, -5.0f,
         0.0f, 2.0f,  5.0f,  -0.5f, -5.0f, 2.0f,  2.0f};
+
+    float transparentVertices[] = {
+        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+        0.0f, 0.5f, 0.0f, 0.0f,  0.0f, 0.0f, -0.5f, 0.0f,
+        0.0f, 1.0f, 1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
+
+        0.0f, 0.5f, 0.0f, 0.0f,  0.0f, 1.0f, -0.5f, 0.0f,
+        1.0f, 1.0f, 1.0f, 0.5f,  0.0f, 1.0f, 0.0f};
+
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -194,6 +210,7 @@ int main(int argc, char *argv[])
                           5 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
+
     // plane VAO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
@@ -203,6 +220,32 @@ int main(int argc, char *argv[])
     glBufferData(GL_ARRAY_BUFFER,
                  sizeof(planeVertices),
                  &planeVertices,
+                 GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          5 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+    // transparent VAO
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(transparentVertices),
+                 transparentVertices,
                  GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,
@@ -230,6 +273,8 @@ int main(int argc, char *argv[])
         FileSystem::getPath("BJResource/marble.jpg").c_str());
     unsigned int floorTexture = loadTexture(
         FileSystem::getPath("BJResource/metal.png").c_str());
+    unsigned int grassTexture =
+        loadTexture(FileSystem::getPath("BJResource/grass.png").c_str());
     #pragma endregion
 
     // glUseProgram(shaderProgram); // don’t forget to activate the shader first!
@@ -530,6 +575,14 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
 
     #pragma endregion
 
+    // transparent vegetation locations
+    // --------------------------------
+    std::vector<glm::vec3> vegetation{glm::vec3(-1.5f, 0.0f, -0.48f),
+                                 glm::vec3(1.5f, 0.0f, 0.51f),
+                                 glm::vec3(0.0f, 0.0f, 0.7f),
+                                 glm::vec3(-0.3f, 0.0f, -2.3f),
+                                 glm::vec3(0.5f, 0.0f, -0.6f)};
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -559,27 +612,34 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
                              0.1f,
                              100.0f);
 
-        shaderSingleColor.use();
-        shaderSingleColor.setMat4("view", view);
-        shaderSingleColor.setMat4("projection", projection);
-
         shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
-        {
-            // phase 1) floor 는 stencil 적용을 하지 않을 것이므로 평소처럼 그린다.
-            // 이를 위해 stencil 값에 기록을 안하도록 하기 위해 아래와 같은 mask 설정을 한다.
-            glStencilMask(0x00);
+        simpleBlendingDiscard.use();
+        simpleBlendingDiscard.setMat4("view", view);
+        simpleBlendingDiscard.setMat4("projection", projection);
 
+        shaderSingleColor.use();
+        shaderSingleColor.setMat4("view", view);
+        shaderSingleColor.setMat4("projection", projection);
+
+        // phase 1) floor 및 다른 대상은 stencil 적용을 하지 않을 것이므로 평소처럼 그린다.
+        // 이를 위해 stencil 값에 기록을 안하도록 하기 위해 아래와 같은 mask 설정을 한다.
+        
+        {
+            shader.use();
+            glStencilMask(0x00);
             glBindVertexArray(planeVAO);
             glBindTexture(GL_TEXTURE_2D, floorTexture);
             shader.setMat4("model", glm::mat4(1.0f));
             glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
         }
-       
+
         {
+            shader.use();
+
             // phase 2) Stencil Buffer 에 '1' 을 write 한다.
             glStencilFunc(
                 GL_ALWAYS, // 항상 stencil pass
@@ -650,6 +710,20 @@ scene 에서 다른 object 들에 대한 depth testing 이 필요하기 때문�
             glEnable(GL_DEPTH_TEST);
         }
 
+        {
+            // vegetation
+            simpleBlendingDiscard.use();
+            glStencilMask(0x00);
+            glBindVertexArray(transparentVAO);
+            glBindTexture(GL_TEXTURE_2D, grassTexture);
+            for (unsigned int i = 0; i < vegetation.size(); i++)
+            {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, vegetation[i]);
+                simpleBlendingDiscard.setMat4("model", model);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+        }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
