@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stb_image.h>
 #include "Shader.h"
+#include "Model.h"
 #include "Camera.h"
 
 #include <iostream>
@@ -102,6 +103,20 @@ int main()
     std::string geoShaderPath = FileSystem::getPath("LearnOpenGL/HouseGeomtery.glsl");
     Shader houseGeoShader(vrxShaderPath.c_str(), fragShaderPath.c_str(), 
         geoShaderPath.c_str());
+
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/ExplodingVertex.glsl");
+    fragShaderPath = FileSystem::getPath("LearnOpenGL/ExplodingFrag.glsl");
+    geoShaderPath =
+        FileSystem::getPath("LearnOpenGL/ExplodingGeomtery.glsl");
+    Shader explodingGeoShader(vrxShaderPath.c_str(),
+                          fragShaderPath.c_str(),
+                          geoShaderPath.c_str());
+
+    // load models
+    // -----------
+    std::string modelPath =
+        FileSystem::getPath("BJResource/Resources/backpack/backpack.obj");
+    Model sampleModel(modelPath.c_str());
 
     // cube VAO
     unsigned int textureCubeVAO, textureCubeVBO;
@@ -409,10 +424,32 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         {
+            // configure transformation matrices
+            glm::mat4 projection =
+                glm::perspective(glm::radians(45.0f),
+                                 (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                 1.0f,
+                                 100.0f);
+            glm::mat4 view = camera.GetViewMatrix();
+            glm::mat4 model = glm::mat4(1.0f);
+            explodingGeoShader.use();
+            explodingGeoShader.setMat4("projection", projection);
+            explodingGeoShader.setMat4("view", view);
+            explodingGeoShader.setMat4("model", model);
+
+            // add time component to geometry shader in the form of a uniform
+            explodingGeoShader.setFloat("time",
+                                        static_cast<float>(glfwGetTime()));
+
+            // draw model
+            sampleModel.Draw(explodingGeoShader);
+        }
+
+        {
             // draw points
-            houseGeoShader.use();
-            glBindVertexArray(houseVAO);
-            glDrawArrays(GL_POINTS, 0, 4);
+            // houseGeoShader.use();
+            // glBindVertexArray(houseVAO);
+            // glDrawArrays(GL_POINTS, 0, 4);
         }
 
         {
