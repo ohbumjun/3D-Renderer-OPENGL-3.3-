@@ -31,6 +31,16 @@ int main()
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
+    
+#pragma region MultiSample
+    // normal buffer 대신에
+    //  N Sample 의 multisample buffer 를 사용하겠다는 설정을 해야 한다.
+    // 이렇게 하고 나서 glfwCreateWindow 을 하게 되면, 각 screen 좌표마다
+    // 4개의 sub sample 을 가진 buffer 가 만들어진다. 즉, buffer 의 크기가
+    // 4배가 된다는 것이다.
+    glfwWindowHint(GLFW_SAMPLES, 4);
+#pragma endregion
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -38,6 +48,13 @@ int main()
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+
+    
+#pragma region MultiSample
+    // 보통 대부분의 hardware 에서 multisampling 은 기본값이다
+    // 그래서 사실 아래의 코드가 무의미할 수 있으나, 설정해본다.
+    glEnable(GL_MULTISAMPLE);
+#pragma endregion
 
     // glfw window creation
     // --------------------
