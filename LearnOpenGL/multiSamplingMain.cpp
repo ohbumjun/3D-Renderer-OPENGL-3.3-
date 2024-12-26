@@ -338,9 +338,10 @@ int main()
 
         // // disable depth test so screen-space quad isn't discarded due to depth test.
         // 자. 이제 화면 전체를 덮을 quad 를 그리고자 하는 것이다
-        // 해당 fragment 뒤에는 그릴 대상이 없다
         // 만약 depth test 가 enabler 되면, depth  buffer 에 이미 존재하는
-        // 값과 비교가 될 것이다. 그러면 일부 내용이 통과되지 않을 수 있다.
+        // 값과 비교가 될 것이다. 만약 default frame buffer 에 이미 어떤 내용이
+        // draw 가 되어 있었고 해당 pixel 에서의 z 값이 depth buffer 에 존재한다면
+        // 현재 quad 를 그릴 때, 해당 pixel 은 그려지지 않을 것이다.
         glDisable(GL_DEPTH_TEST); 
 
         // draw Screen quad
