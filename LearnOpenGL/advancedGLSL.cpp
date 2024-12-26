@@ -294,9 +294,7 @@ int main()
     unsigned int grassTexture = loadTexture(
         FileSystem::getPath("BJResource/grass.png").c_str());
 
-    // configure a uniform buffer object
-    // ---------------------------------
-    // first. We get the relevant block indices
+    // uniform block index : shader 에서 정의된 uniform block 안에서의 index
     unsigned int uniformBlockIndexRed =
         glGetUniformBlockIndex(shaderRed.ID, "Matrices");
     unsigned int uniformBlockIndexGreen =
@@ -305,26 +303,39 @@ int main()
         glGetUniformBlockIndex(shaderBlue.ID, "Matrices");
     unsigned int uniformBlockIndexYellow =
         glGetUniformBlockIndex(shaderYellow.ID, "Matrices");
+
     // then we link each shader's uniform block to this uniform binding point
-    glUniformBlockBinding(shaderRed.ID, uniformBlockIndexRed, 0);
+    // shader 안에 있는 특정 uniform block 을 여러 binding point 중 하나에
+    // link 시키는 함수
+    glUniformBlockBinding(shaderRed.ID, 
+        uniformBlockIndexRed, 
+        0);
     glUniformBlockBinding(shaderGreen.ID, uniformBlockIndexGreen, 0);
     glUniformBlockBinding(shaderBlue.ID, uniformBlockIndexBlue, 0);
     glUniformBlockBinding(shaderYellow.ID, uniformBlockIndexYellow, 0);
-    // Now actually create the buffer
+
+    // Now actually create the uniform buffer object 
     unsigned int uboMatrices;
     glGenBuffers(1, &uboMatrices);
+
+    // ubo 생성 이후, binding point 에 link 한다.
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+
+    // ubo 를 위한 메모리를 할당한다 (아직 데이터 채워지지 않음)
     glBufferData(GL_UNIFORM_BUFFER,
-                 2 * sizeof(glm::mat4),
+                 2 * sizeof(glm::mat4), // uniform buffer object 의 크기
                  NULL,
                  GL_STATIC_DRAW);
+
+    // uniform binding 해제
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     // define the range of the buffer that links to a uniform binding point
     glBindBufferRange(GL_UNIFORM_BUFFER,
-                      0,
-                      uboMatrices,
-                      0,
-                      2 * sizeof(glm::mat4));
+                      0,  // binding point for the uniform buffer
+                      uboMatrices,// 해당 binding point 에 link 시키고 싶은 ubo
+                      0, // This is the offset in bytes from the beginning of the  buffer object.In this case, the range starts from the beginning of the buffer.
+                      2 * sizeof(glm::mat4)); // This is the size of the range in bytes
 
     // store the projection matrix (we only do this once now) (note: we're not using zoom anymore by changing the FoV)
     glm::mat4 projection =
@@ -333,10 +344,12 @@ int main()
                          0.1f,
                          100.0f);
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+
+    // 전체 ubo 중에서 일부분만 update 한다.
     glBufferSubData(GL_UNIFORM_BUFFER,
-                    0,
-                    sizeof(glm::mat4),
-                    glm::value_ptr(projection));
+                    0, // offset in byte
+                    sizeof(glm::mat4), // size of data to be written
+                    glm::value_ptr(projection)); // ptr to data
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     modelVertexShader.use();
@@ -363,79 +376,82 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         {
-            modelVertexShader.use();
-            
-            glActiveTexture(GL_TEXTURE0); 
-            glBindTexture(GL_TEXTURE_2D, cubeTexture);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, grassTexture);
-
-            glBindVertexArray(textureCubeVAO);
-
-            glm::mat4 model = glm::mat4(1.0f);
-            glm::mat4 view = camera.GetViewMatrix();
-            glm::mat4 projection =
-                glm::perspective(glm::radians(camera.Zoom),
-                                    (float)SCR_WIDTH / (float)SCR_HEIGHT,
-                                    0.1f,
-                                    100.0f);
-            model = glm::translate(model,
-                               glm::vec3(-0.f, 0.f, 0.0f)); // move top-left
-
-            modelVertexShader.setMat4("model", model);
-            modelVertexShader.setMat4("projection", projection);
-            modelVertexShader.setMat4("view", view);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            // modelVertexShader.use();
+            // 
+            // glActiveTexture(GL_TEXTURE0); 
+            // glBindTexture(GL_TEXTURE_2D, cubeTexture);
+            // glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(GL_TEXTURE_2D, grassTexture);
+            // 
+            // glBindVertexArray(textureCubeVAO);
+            // 
+            // glm::mat4 model = glm::mat4(1.0f);
+            // glm::mat4 view = camera.GetViewMatrix();
+            // glm::mat4 projection =
+            //     glm::perspective(glm::radians(camera.Zoom),
+            //                         (float)SCR_WIDTH / (float)SCR_HEIGHT,
+            //                         0.1f,
+            //                         100.0f);
+            // model = glm::translate(model,
+            //                    glm::vec3(-0.f, 0.f, 0.0f)); // move top-left
+            // 
+            // modelVertexShader.setMat4("model", model);
+            // modelVertexShader.setMat4("projection", projection);
+            // modelVertexShader.setMat4("view", view);
+            // 
+            // glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
         {
             // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
             glm::mat4 view = camera.GetViewMatrix();
             glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+
             glBufferSubData(GL_UNIFORM_BUFFER,
-                            sizeof(glm::mat4),
+                            sizeof(glm::mat4), // ubo 중에 앞에  project 외에 이후 view 만 update
                             sizeof(glm::mat4),
                             glm::value_ptr(view));
+
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
             // draw 4 cubes
             // RED
-            // glBindVertexArray(cubeVAO);
-            // shaderRed.use();
-            // glm::mat4 model = glm::mat4(1.0f);
-            // model =
-            //     glm::translate(model,
-            //                    glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
-            // shaderRed.setMat4("model", model);
-            // glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(cubeVAO);
+            shaderRed.use();
+            glm::mat4 model = glm::mat4(1.0f);
+            model =
+                glm::translate(model,
+                               glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+            shaderRed.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            //// GREEN
+            shaderGreen.use();
+            model = glm::mat4(1.0f);
+            model = glm::translate(model,
+                                   glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+            shaderGreen.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            //// YELLOW
+            shaderYellow.use();
+            model = glm::mat4(1.0f);
+            model =
+                glm::translate(model,
+                               glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+            shaderYellow.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            //// BLUE
+            shaderBlue.use();
+            model = glm::mat4(1.0f);
+            model =
+                glm::translate(model,
+                               glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+            shaderBlue.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-
-        //// GREEN
-        //shaderGreen.use();
-        //model = glm::mat4(1.0f);
-        //model = glm::translate(model,
-        //                       glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
-        //shaderGreen.setMat4("model", model);
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        //// YELLOW
-        //shaderYellow.use();
-        //model = glm::mat4(1.0f);
-        //model =
-        //    glm::translate(model,
-        //                   glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
-        //shaderYellow.setMat4("model", model);
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        //// BLUE
-        //shaderBlue.use();
-        //model = glm::mat4(1.0f);
-        //model =
-        //    glm::translate(model,
-        //                   glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
-        //shaderBlue.setMat4("model", model);
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
+        
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
