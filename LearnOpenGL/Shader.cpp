@@ -113,7 +113,7 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath,
         // read file¡¯s buffer contents into streams
         vShaderStream << vShaderFile.rdbuf();
         fShaderStream << fShaderFile.rdbuf();
-        geoShaderStream << fShaderFile.rdbuf();
+        geoShaderStream << geoShaderFile.rdbuf();
 
         // close file handlers
         vShaderFile.close();

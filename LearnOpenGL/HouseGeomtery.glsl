@@ -16,6 +16,7 @@ out vec3 fColor;
 
 void build_house(vec4 position)
 {    
+
     fColor = gs_in[0].color; // gs_in[0] since there's only one input vertex
     gl_Position = position + vec4(-0.2, -0.2, 0.0, 0.0); // 1:bottom-left   
     EmitVertex();   
@@ -26,7 +27,7 @@ void build_house(vec4 position)
     gl_Position = position + vec4( 0.2,  0.2, 0.0, 0.0); // 4:top-right
     EmitVertex();
     gl_Position = position + vec4( 0.0,  0.4, 0.0, 0.0); // 5:top
-    fColor = vec3(1.0, 1.0, 1.0);
+    fColor = vec3(1.0, 1.0, 1.0); // ÁöºØ ÂÊ Á¡Àº Èò»ö
     EmitVertex();
     EndPrimitive();
 }

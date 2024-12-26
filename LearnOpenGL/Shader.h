@@ -20,6 +20,8 @@ public:
     unsigned int ID;
     // constructor reads and builds the shader
     Shader(const char *vertexPath, const char *fragmentPath);
+    Shader(const char *vertexPath, const char *fragmentPath,
+           const char *geometryPath);
     // use/activate the shader
     void use()
     {

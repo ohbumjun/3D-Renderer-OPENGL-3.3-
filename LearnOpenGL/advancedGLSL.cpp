@@ -96,6 +96,13 @@ int main()
 
     fragShaderPath = FileSystem::getPath("LearnOpenGL/8.yellow.glsl");
     Shader shaderYellow(vrxShaderPath.c_str(), fragShaderPath.c_str());
+
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/HouseVertex.glsl");
+    fragShaderPath = FileSystem::getPath("LearnOpenGL/HouseFrag.glsl");
+    std::string geoShaderPath = FileSystem::getPath("LearnOpenGL/HouseGeomtery.glsl");
+    Shader houseGeoShader(vrxShaderPath.c_str(), fragShaderPath.c_str(), 
+        geoShaderPath.c_str());
+
     // cube VAO
     unsigned int textureCubeVAO, textureCubeVBO;
     float textureCubeVertices[] = {
@@ -289,6 +296,32 @@ int main()
                           3 * sizeof(float),
                           (void *)0);
 
+    float housePoints[] = {
+        -0.5f, 0.5f,  1.0f, 0.0f, 0.0f, // top-left
+        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
+        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+        -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+    };
+    unsigned int houseVBO, houseVAO;
+    glGenBuffers(1, &houseVBO);
+    glGenVertexArrays(1, &houseVAO);
+    glBindVertexArray(houseVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, houseVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(housePoints),
+                 &housePoints,
+                 GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          5 * sizeof(float),
+                          (void *)(2 * sizeof(float)));
+    glBindVertexArray(0);
+
     unsigned int cubeTexture = loadTexture(
         FileSystem::getPath("BJResource/marble.jpg").c_str());
     unsigned int grassTexture = loadTexture(
@@ -376,6 +409,13 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         {
+            // draw points
+            houseGeoShader.use();
+            glBindVertexArray(houseVAO);
+            glDrawArrays(GL_POINTS, 0, 4);
+        }
+
+        {
             // modelVertexShader.use();
             // 
             // glActiveTexture(GL_TEXTURE0); 
@@ -403,53 +443,53 @@ int main()
         }
 
         {
-            // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
-            glm::mat4 view = camera.GetViewMatrix();
-            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+            //// set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
+            //glm::mat4 view = camera.GetViewMatrix();
+            //glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
 
-            glBufferSubData(GL_UNIFORM_BUFFER,
-                            sizeof(glm::mat4), // ubo 중에 앞에  project 외에 이후 view 만 update
-                            sizeof(glm::mat4),
-                            glm::value_ptr(view));
+            //glBufferSubData(GL_UNIFORM_BUFFER,
+            //                sizeof(glm::mat4), // ubo 중에 앞에  project 외에 이후 view 만 update
+            //                sizeof(glm::mat4),
+            //                glm::value_ptr(view));
 
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            //glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-            // draw 4 cubes
-            // RED
-            glBindVertexArray(cubeVAO);
-            shaderRed.use();
-            glm::mat4 model = glm::mat4(1.0f);
-            model =
-                glm::translate(model,
-                               glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
-            shaderRed.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            //// draw 4 cubes
+            //// RED
+            //glBindVertexArray(cubeVAO);
+            //shaderRed.use();
+            //glm::mat4 model = glm::mat4(1.0f);
+            //model =
+            //    glm::translate(model,
+            //                   glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+            //shaderRed.setMat4("model", model);
+            //glDrawArrays(GL_TRIANGLES, 0, 36);
 
-            //// GREEN
-            shaderGreen.use();
-            model = glm::mat4(1.0f);
-            model = glm::translate(model,
-                                   glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
-            shaderGreen.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            ////// GREEN
+            //shaderGreen.use();
+            //model = glm::mat4(1.0f);
+            //model = glm::translate(model,
+            //                       glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+            //shaderGreen.setMat4("model", model);
+            //glDrawArrays(GL_TRIANGLES, 0, 36);
 
-            //// YELLOW
-            shaderYellow.use();
-            model = glm::mat4(1.0f);
-            model =
-                glm::translate(model,
-                               glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
-            shaderYellow.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            ////// YELLOW
+            //shaderYellow.use();
+            //model = glm::mat4(1.0f);
+            //model =
+            //    glm::translate(model,
+            //                   glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+            //shaderYellow.setMat4("model", model);
+            //glDrawArrays(GL_TRIANGLES, 0, 36);
 
-            //// BLUE
-            shaderBlue.use();
-            model = glm::mat4(1.0f);
-            model =
-                glm::translate(model,
-                               glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
-            shaderBlue.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            ////// BLUE
+            //shaderBlue.use();
+            //model = glm::mat4(1.0f);
+            //model =
+            //    glm::translate(model,
+            //                   glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+            //shaderBlue.setMat4("model", model);
+            //glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         
 
@@ -463,6 +503,8 @@ int main()
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteBuffers(1, &cubeVBO);
+    glDeleteBuffers(1, &houseVAO);
+    glDeleteBuffers(1, &houseVBO);
 
     glfwTerminate();
     return 0;
