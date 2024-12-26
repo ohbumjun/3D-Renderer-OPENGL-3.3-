@@ -41,6 +41,17 @@
 //    // glfw: initialize and configure
 //    // ------------------------------
 //    glfwInit();
+//
+//#pragma region MultiSample
+//    // normal buffer 대신에
+//    //  N Sample 의 multisample buffer 를 사용하겠다는 설정을 해야 한다.
+//    // 이렇게 하고 나서 glfwCreateWindow 을 하게 되면, 각 screen 좌표마다
+//    // 4개의 sub sample 을 가진 buffer 가 만들어진다. 즉, buffer 의 크기가
+//    // 4배가 된다는 것이다.
+//    glfwWindowHint(GLFW_SAMPLES, 4);
+//#pragma endregion
+//
+//
 //    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 //    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 //    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -77,6 +88,13 @@
 //    // configure global opengl state
 //    // -----------------------------
 //    glEnable(GL_DEPTH_TEST);
+//
+//#pragma region MultiSample
+//    // 보통 대부분의 hardware 에서 multisampling 은 기본값이다
+//    // 그래서 사실 아래의 코드가 무의미할 수 있으나, 설정해본다.
+//    glEnable(GL_MULTISAMPLE);
+//#pragma endregion
+//
 //
 //    // build and compile shaders
 //    // -------------------------
@@ -121,9 +139,9 @@
 //
 //    // load models
 //    // -----------
-//    std::string modelPath =
-//        FileSystem::getPath("BJResource/Resources/backpack/backpack.obj");
-//    Model sampleModel(modelPath.c_str());
+//    // std::string modelPath =
+//    //     FileSystem::getPath("BJResource/Resources/backpack/backpack.obj");
+//    // Model sampleModel(modelPath.c_str());
 //
 //    // cube VAO
 //    unsigned int textureCubeVAO, textureCubeVBO;
@@ -432,32 +450,32 @@
 //
 //        {
 //            // configure transformation matrices
-//            glm::mat4 projection =
-//                glm::perspective(glm::radians(45.0f),
-//                                 (float)SCR_WIDTH / (float)SCR_HEIGHT,
-//                                 1.0f,
-//                                 100.0f);
-//            glm::mat4 view = camera.GetViewMatrix();
-//            glm::mat4 model = glm::mat4(1.0f);
-//            explodingGeoShader.use();
-//            explodingGeoShader.setMat4("projection", projection);
-//            explodingGeoShader.setMat4("view", view);
-//            explodingGeoShader.setMat4("model", model);
-//
-//            // add time component to geometry shader in the form of a uniform
-//            explodingGeoShader.setFloat("time",
-//                                        static_cast<float>(glfwGetTime()));
-//
-//            // draw model
-//            sampleModel.Draw(explodingGeoShader);
-//
-//            // then draw normal
-//            visualizingNormalShader.use();
-//            visualizingNormalShader.setMat4("projection", projection);
-//            visualizingNormalShader.setMat4("view", view);
-//            visualizingNormalShader.setMat4("model", model);
-//
-//            sampleModel.Draw(visualizingNormalShader);
+//            // glm::mat4 projection =
+//            //     glm::perspective(glm::radians(45.0f),
+//            //                      (float)SCR_WIDTH / (float)SCR_HEIGHT,
+//            //                      1.0f,
+//            //                      100.0f);
+//            // glm::mat4 view = camera.GetViewMatrix();
+//            // glm::mat4 model = glm::mat4(1.0f);
+//            // explodingGeoShader.use();
+//            // explodingGeoShader.setMat4("projection", projection);
+//            // explodingGeoShader.setMat4("view", view);
+//            // explodingGeoShader.setMat4("model", model);
+//            // 
+//            // // add time component to geometry shader in the form of a uniform
+//            // explodingGeoShader.setFloat("time",
+//            //                             static_cast<float>(glfwGetTime()));
+//            // 
+//            // // draw model
+//            // sampleModel.Draw(explodingGeoShader);
+//            // 
+//            // // then draw normal
+//            // visualizingNormalShader.use();
+//            // visualizingNormalShader.setMat4("projection", projection);
+//            // visualizingNormalShader.setMat4("view", view);
+//            // visualizingNormalShader.setMat4("model", model);
+//            // 
+//            // sampleModel.Draw(visualizingNormalShader);
 //        }
 //
 //        {
@@ -506,16 +524,16 @@
 //
 //            //glBindBuffer(GL_UNIFORM_BUFFER, 0);
 //
-//            //// draw 4 cubes
-//            //// RED
-//            //glBindVertexArray(cubeVAO);
-//            //shaderRed.use();
-//            //glm::mat4 model = glm::mat4(1.0f);
-//            //model =
-//            //    glm::translate(model,
-//            //                   glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
-//            //shaderRed.setMat4("model", model);
-//            //glDrawArrays(GL_TRIANGLES, 0, 36);
+//            // draw 4 cubes
+//            // RED
+//            glBindVertexArray(cubeVAO);
+//            shaderRed.use();
+//            glm::mat4 model = glm::mat4(1.0f);
+//            model =
+//                glm::translate(model,
+//                               glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+//            shaderRed.setMat4("model", model);
+//            glDrawArrays(GL_TRIANGLES, 0, 36);
 //
 //            ////// GREEN
 //            //shaderGreen.use();
