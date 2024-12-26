@@ -112,6 +112,13 @@ int main()
                           fragShaderPath.c_str(),
                           geoShaderPath.c_str());
 
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/VisualizeNormalVertex.glsl");
+    fragShaderPath = FileSystem::getPath("LearnOpenGL/VisualizeNormalFrag.glsl");
+    geoShaderPath = FileSystem::getPath("LearnOpenGL/VisualizeNormalGeomtery.glsl");
+    Shader visualizingNormalShader(vrxShaderPath.c_str(),
+                              fragShaderPath.c_str(),
+                              geoShaderPath.c_str());
+
     // load models
     // -----------
     std::string modelPath =
@@ -443,6 +450,14 @@ int main()
 
             // draw model
             sampleModel.Draw(explodingGeoShader);
+
+            // then draw normal
+            visualizingNormalShader.use();
+            visualizingNormalShader.setMat4("projection", projection);
+            visualizingNormalShader.setMat4("view", view);
+            visualizingNormalShader.setMat4("model", model);
+
+            sampleModel.Draw(visualizingNormalShader);
         }
 
         {
