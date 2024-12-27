@@ -60,7 +60,7 @@ glm::vec3 lightColors[] = {glm::vec3(0.25),
                            glm::vec3(0.75),
                            glm::vec3(1.00)};
 
-glm::vec3 depthMapLightPos(-2.0f, 4.0f, -1.0f);
+glm::vec3 depthMapDirectionalLightPos(-2.0f, 4.0f, -1.0f);
 
 int main()
 {
@@ -137,6 +137,10 @@ int main()
 
     Shader depthMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/ShadowMapVS.glsl");
+    fragShaderPath = FileSystem::getPath("LearnOpenGL/ShadowMapFS.glsl");
+
+    Shader shadowMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -247,9 +251,11 @@ int main()
 
         gammaCorrectionShader.use();
         gammaCorrectionShader.setInt("floorTexture", 0);
+
+        shadowMapShader.use();
+        shadowMapShader.setInt("diffuseTexture", 0);
+        shadowMapShader.setInt("shadowMap", 1);
     }
-
-
 
     // render loop
     // -----------
@@ -273,11 +279,14 @@ int main()
         // 1) Gamma Correction 예시
         // renderGamma(gammaCorrectionShader, floorTexture, floorTextureGmaCorrected);
 
+        glm::mat4 lightProjection, lightView;
+        glm::mat4 lightSpaceMatrix;
+        float near_plane = 1.0f, far_plane = 7.5f;
+
         {
             // Depth Map 그리기
             // 1. render depth of scene to texture (from light's perspective)
-            glm::mat4 lightProjection, lightView;
-            glm::mat4 lightSpaceMatrix;
+
 
             // 현재 코드는 directional light 관점에서의 depth map 을 만들고 있다.
             // 이로 인해 모든 light ray 는 같은 방향을 가진다.
@@ -290,7 +299,7 @@ int main()
             float near_plane = 1.0f, far_plane = 7.5f;
             lightProjection =
                 glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-            lightView = glm::lookAt(depthMapLightPos,
+            lightView = glm::lookAt(depthMapDirectionalLightPos,
                                     glm::vec3(0.0f),
                                     glm::vec3(0.0, 1.0, 0.0));
 
@@ -316,7 +325,9 @@ int main()
             renderScene(depthMapShader);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
 
+        {
             // reset viewport
             // 왜 viewport 를 reset 해야 하는 것일까 ?
             // 가끔 shader map 의 크기가 실제 우리가 그리는 scene 크기와 다를 수 있다
@@ -325,20 +336,36 @@ int main()
             glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            
+
+            shadowMapShader.use();
+            glm::mat4 projection =
+                glm::perspective(glm::radians(camera.Zoom),
+                                 (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                 0.1f,
+                                 100.0f);
+            glm::mat4 view = camera.GetViewMatrix();
+            shadowMapShader.setMat4("projection", projection);
+            shadowMapShader.setMat4("view", view);
+            // set light uniforms
+            shadowMapShader.setVec3f("viewPos", camera.Position);
+            shadowMapShader.setVec3f("lightPos", depthMapDirectionalLightPos);
+            shadowMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, floorTexture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
+            renderScene(shadowMapShader);
+        }
+
+        {
+
             // render Depth map to quad for visual debugging
             // ---------------------------------------------
             simpleDebugShader.use();
             simpleDebugShader.setFloat("near_plane", near_plane);
             simpleDebugShader.setFloat("far_plane", far_plane);
-
             glActiveTexture(GL_TEXTURE0);
-
-            // 앞서 1st pass 에서 만들어낸 depth map texure 도 넘겨준다.
             glBindTexture(GL_TEXTURE_2D, depthMap);
-
-            renderQuad();
-
         }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
