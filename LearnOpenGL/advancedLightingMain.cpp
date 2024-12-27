@@ -354,7 +354,10 @@ int main()
             glBindTexture(GL_TEXTURE_2D, floorTexture);
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, depthMap);
+
+            glCullFace(GL_FRONT);
             renderScene(shadowMapShader);
+            glCullFace(GL_BACK); // don’t forget to reset original culling face
         }
 
         {
