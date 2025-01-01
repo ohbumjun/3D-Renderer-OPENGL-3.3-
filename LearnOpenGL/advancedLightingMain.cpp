@@ -37,7 +37,10 @@ void renderDirectionalShadow(Shader &directionalShadowMapShader,
                              unsigned int floorTexture,
                              unsigned int directonalDepthMap,
                              glm::mat4 &lightSpaceMatrix);
-
+void renderDepthMapDebug(Shader &simpleDebugShader,
+                         float near_plane,
+                         float far_plane,
+                         unsigned int directonalDepthMap);
     // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -59,6 +62,10 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// Point Shadow
+bool shadows = true;
+bool shadowsKeyPressed = false;
 
 // meshes
 unsigned int planeVAO;
@@ -120,6 +127,7 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    #pragma region Shader
     // build and compile shaders
     // -------------------------
     std::string vrxShaderPath =
@@ -156,23 +164,25 @@ int main()
     Shader directionalShadowMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
    vrxShaderPath = FileSystem::getPath(
-       "LearnOpenGL/PointShadowMapDepthVS.glsl");
+       "LearnOpenGL/PointShadowDepthVS.glsl");
    std::string geoShaderPath = FileSystem::getPath(
-       "LearnOpenGL/PointShadowMapDepthGS.glsl");
+       "LearnOpenGL/PointShadowDepthGS.glsl");
     fragShaderPath = FileSystem::getPath(
-        "LearnOpenGL/PointShadowMapDepthFS.glsl");
+        "LearnOpenGL/PointShadowDepthFS.glsl");
 
     Shader pointerDepthMapShader(vrxShaderPath.c_str(),
-                                 geoShaderPath.c_str(),
-                                     fragShaderPath.c_str());
+                                 fragShaderPath.c_str(),
+                                 geoShaderPath.c_str());
 
     vrxShaderPath = FileSystem::getPath("LearnOpenGL/PointShadowVS.glsl");
     fragShaderPath = FileSystem::getPath("LearnOpenGL/PointShadowFS.glsl");
 
-    Shader pointShadowMapShader(vrxShaderPath.c_str(),
+    Shader pointShadowShader(vrxShaderPath.c_str(),
                                       fragShaderPath.c_str());
 
+    #pragma endregion
 
+    #pragma region Vertex
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -218,14 +228,6 @@ int main()
                           8 * sizeof(float),
                           (void *)(6 * sizeof(float)));
     glBindVertexArray(0);
-
-    // load textures
-    // -------------
-    unsigned int floorTexture =
-        loadTexture(FileSystem::getPath("BJResource/wood.png").c_str(), false);
-    unsigned int floorTextureGmaCorrected =
-        loadTexture(FileSystem::getPath("BJResource/wood.png").c_str(), true);
-
 
     // configure depth map FBO
     // -----------------------
@@ -314,6 +316,16 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
+    #pragma endregion
+    
+    // load textures
+    // -------------
+    unsigned int floorTexture =
+        loadTexture(FileSystem::getPath("BJResource/wood.png").c_str(), false);
+    unsigned int floorTextureGmaCorrected =
+        loadTexture(FileSystem::getPath("BJResource/wood.png").c_str(), true);
+
+
     {
         // shader configuration
         // ----------------------
@@ -330,10 +342,15 @@ int main()
         directionalShadowMapShader.setInt("diffuseTexture", 0);
         directionalShadowMapShader.setInt("shadowMap", 1);
 
-        pointShadowMapShader.use();
-        pointShadowMapShader.setInt("diffuseTexture", 0);
-        pointShadowMapShader.setInt("depthMap", 1);
+        pointShadowShader.use();
+        pointShadowShader.setInt("diffuseTexture", 0);
+        pointShadowShader.setInt("depthMap", 1);
     }
+
+    
+    // lighting info
+    // -------------
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
     // render loop
     // -----------
@@ -357,33 +374,108 @@ int main()
         // 1) Gamma Correction 예시
         // renderGamma(gammaCorrectionShader, floorTexture, floorTextureGmaCorrected);
 
-        glm::mat4 lightSpaceMatrix;
+        // 2) Directional Light Shadow Map
+        {
+            // glm::mat4 lightSpaceMatrix;
+            // renderDirectionalLightDepthMap(directionalDepthMapShader,
+            //                                    directionalDepthMapFBO,
+            //                                    SHADOW_WIDTH,
+            //                                    SHADOW_HEIGHT,
+            //                                    floorTexture,
+            //                                lightSpaceMatrix);
+            //  renderDirectionalShadow(directionalShadowMapShader,
+            // 									    SHADOW_WIDTH,
+            // 									    SHADOW_HEIGHT,
+            // 									    floorTexture,
+            // 									    directonalDepthMap,
+            // 									    lightSpaceMatrix);
+            //
+            //  renderDepthMapDebug(simpleDebugShader,
+            //      1.0f, 7.5f, directonalDepthMap);
+        }
 
-            renderDirectionalLightDepthMap(directionalDepthMapShader,
-                                           directionalDepthMapFBO,
-                                           SHADOW_WIDTH,
-                                           SHADOW_HEIGHT,
-                                           floorTexture,
-                                       lightSpaceMatrix);
-            renderDirectionalShadow(directionalShadowMapShader,
-            									SHADOW_WIDTH,
-            									SHADOW_HEIGHT,
-            									floorTexture,
-            									directonalDepthMap,
-            									lightSpaceMatrix);
-        // {
-        // 
-        //     // render Depth map to quad for visual debugging
-        //     // ---------------------------------------------
-        //     simpleDebugShader.use();
-        //     simpleDebugShader.setFloat("near_plane", near_plane);
-        //     simpleDebugShader.setFloat("far_plane", far_plane);
-        //     glActiveTexture(GL_TEXTURE0);
-        //     glBindTexture(GL_TEXTURE_2D, directonalDepthMap);
-        // }
+        //3) Point Shadow
+        {
+            // 0. create depth cubemap transformation matrices
+            // -----------------------------------------------
+            float near_plane = 1.0f;
+            float far_plane = 25.0f;
+            glm::mat4 shadowProj =
+                glm::perspective(glm::radians(90.0f),
+                                 (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT,
+                                 near_plane,
+                                 far_plane);
+            std::vector<glm::mat4> shadowTransforms;
+            shadowTransforms.push_back(
+                shadowProj * glm::lookAt(lightPos,
+                                         lightPos + glm::vec3(1.0f, 0.0f, 0.0f),
+                                         glm::vec3(0.0f, -1.0f, 0.0f)));
+            shadowTransforms.push_back(
+                shadowProj *
+                glm::lookAt(lightPos,
+                            lightPos + glm::vec3(-1.0f, 0.0f, 0.0f),
+                            glm::vec3(0.0f, -1.0f, 0.0f)));
+            shadowTransforms.push_back(
+                shadowProj * glm::lookAt(lightPos,
+                                         lightPos + glm::vec3(0.0f, 1.0f, 0.0f),
+                                         glm::vec3(0.0f, 0.0f, 1.0f)));
+            shadowTransforms.push_back(
+                shadowProj *
+                glm::lookAt(lightPos,
+                            lightPos + glm::vec3(0.0f, -1.0f, 0.0f),
+                            glm::vec3(0.0f, 0.0f, -1.0f)));
+            shadowTransforms.push_back(
+                shadowProj * glm::lookAt(lightPos,
+                                         lightPos + glm::vec3(0.0f, 0.0f, 1.0f),
+                                         glm::vec3(0.0f, -1.0f, 0.0f)));
+            shadowTransforms.push_back(
+                shadowProj *
+                glm::lookAt(lightPos,
+                            lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
+                            glm::vec3(0.0f, -1.0f, 0.0f)));
+            // 1. render scene to depth cubemap
+            // --------------------------------
+            glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+            glBindFramebuffer(GL_FRAMEBUFFER, pointDepthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            pointerDepthMapShader.use();
+            for (unsigned int i = 0; i < 6; ++i)
+                pointerDepthMapShader.setMat4("shadowMatrices[" +
+                                              std::to_string(i) + "]",
+                                          shadowTransforms[i]);
+            pointerDepthMapShader.setFloat("far_plane", far_plane);
+            pointerDepthMapShader.setVec3f("lightPos", lightPos);
+            renderScene(pointerDepthMapShader);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+            // 2. render scene as normal
+            // -------------------------
+            glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            pointShadowShader.use();
+            glm::mat4 projection =
+                glm::perspective(glm::radians(camera.Zoom),
+                                 (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                 0.1f,
+                                 100.0f);
+            glm::mat4 view = camera.GetViewMatrix();
+            pointShadowShader.setMat4("projection", projection);
+            pointShadowShader.setMat4("view", view);
+            // set lighting uniforms
+            pointShadowShader.setVec3f("lightPos", lightPos);
+            pointShadowShader.setVec3f("viewPos", camera.Position);
+            pointShadowShader.setInt(
+                "shadows",
+                shadows); // enable/disable shadows by pressing 'SPACE'
+            pointShadowShader.setFloat("far_plane", far_plane);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, floorTexture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, pointDepthCubemap);
+            renderScene(pointShadowShader);
+        }
+     
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -424,15 +516,25 @@ void processInput(GLFWwindow *window)
     //     blinnKeyPressed = false;
     // }
 
-    
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !gammaKeyPressed)
+    // 2) Gamma
+    // if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !gammaKeyPressed)
+    // {
+    //     gammaEnabled = !gammaEnabled;
+    //     gammaKeyPressed = true;
+    // }
+    // if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    // {
+    //     gammaKeyPressed = false;
+    // }
+
+     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
     {
-        gammaEnabled = !gammaEnabled;
-        gammaKeyPressed = true;
+        shadows = !shadows;
+        shadowsKeyPressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
     {
-        gammaKeyPressed = false;
+        shadowsKeyPressed = false;
     }
 }
 
@@ -713,7 +815,19 @@ void renderDirectionalShadow(Shader &directionalShadowMapShader,
     glCullFace(GL_BACK); // don’t forget to reset original culling face
 }
 
-
+void renderDepthMapDebug(Shader &simpleDebugShader,
+    float near_plane, float far_plane,
+                         unsigned int directonalDepthMap)
+ {
+ 
+     // render Depth map to quad for visual debugging
+     // ---------------------------------------------
+     simpleDebugShader.use();
+     simpleDebugShader.setFloat("near_plane", near_plane);
+     simpleDebugShader.setFloat("far_plane", far_plane);
+     glActiveTexture(GL_TEXTURE0);
+     glBindTexture(GL_TEXTURE_2D, directonalDepthMap);
+ }
 
 
 // renderCube() renders a 1x1 3D cube in NDC.
