@@ -23,6 +23,22 @@ uniform float far_plane;
 uniform bool shadows;
 
 
+//PCF : Percentage Closer Filtering
+// 각진 그림자 현상을 완화하기 위해, shadow map 을 여러 방향으로 sampling 하여
+// 모든 값들의 평균을 낸다. 이때 미리 offset 값들을 정해둔다.
+// 즉, 서로 다른 방향을 가리키는 오프셋 벡터들을 미리 정의하여 샘플링하면
+// 비슷한 방향을 가리키는 여러 픽셀들을 샘플링하는 중복을 피하고
+// 계산 효율을 높일 수 있다.
+// array of offset direction for sampling
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
 // directional shadow map 과 달리 light space 에서의 정보가 아니라
 // world space 에서의 frag 정보를 받는다.
 float ShadowCalculation(vec3 fragPos)
@@ -54,10 +70,47 @@ float ShadowCalculation(vec3 fragPos)
     // now get current linear depth as the length between the fragment and light position
     float currentDepth = length(fragToLight);
     
-    // test for shadows
-    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
-    
-    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;        
+    // 1) 아래 처럼 그리면, 그림자를 가까이서 보면, 각지게 나온다.
+    // {
+    // float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    // float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;        
+    // }
+
+    // 2) 1번째 case 를 해결하기 위해 PCF 적용
+    // 주변 64개의 pixel 을 평균. 그런데 비슷한 방향의 벡터들을 sampling 하게 되어
+    // 중복될 수 있다.
+    //float shadow = 0.0;
+    //float bias = 0.05; 
+    //float samples = 4.0;
+    //float offset = 0.1;
+    //for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+    //{
+       // for(float y = -offset; y < offset; y += offset / (samples * 0.5))
+       // {
+           // for(float z = -offset; z < offset; z += offset / (samples * 0.5))
+           // {
+               // float closestDepth = texture(depthMap, fragToLight + vec3(x, y, z)).r; // use lightdir to lookup cubemap
+               // closestDepth *= far_plane;   // Undo mapping [0;1]
+               // if(currentDepth - bias > closestDepth)
+                   // shadow += 1.0;
+           // }
+       // }
+    //}
+    //shadow /= (samples * samples * samples);
+
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= far_plane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);
 
     // display closestDepth as debug (to visualize depth cubemap)
     // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);    
