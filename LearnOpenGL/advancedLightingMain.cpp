@@ -25,6 +25,19 @@ void renderGamma(Shader &gammaCorrectionShader,
                  unsigned int floorTexture,
                  unsigned int floorTextureGmaCorrected);
 
+void renderDirectionalLightDepthMap(Shader &directionalDepthMapShader,
+                                    unsigned int directionalDepthMapFBO,
+                                    int SHADOW_WIDTH,
+                                    int SHADOW_HEIGHT,
+                                    unsigned int floorTexture,
+                                    glm::mat4 &lightSpaceMatrix);
+void renderDirectionalShadow(Shader &directionalShadowMapShader,
+                             int SHADOW_WIDTH,
+                             int SHADOW_HEIGHT,
+                             unsigned int floorTexture,
+                             unsigned int directonalDepthMap,
+                             glm::mat4 &lightSpaceMatrix);
+
     // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -135,12 +148,31 @@ int main()
     fragShaderPath = 
         FileSystem::getPath("LearnOpenGL/ShadowMapDepthFS.glsl");
 
-    Shader depthMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+    Shader directionalDepthMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
     vrxShaderPath = FileSystem::getPath("LearnOpenGL/ShadowMapVS.glsl");
     fragShaderPath = FileSystem::getPath("LearnOpenGL/ShadowMapFS.glsl");
 
-    Shader shadowMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+    Shader directionalShadowMapShader(vrxShaderPath.c_str(), fragShaderPath.c_str());
+
+   vrxShaderPath = FileSystem::getPath(
+       "LearnOpenGL/PointShadowMapDepthVS.glsl");
+   std::string geoShaderPath = FileSystem::getPath(
+       "LearnOpenGL/PointShadowMapDepthGS.glsl");
+    fragShaderPath = FileSystem::getPath(
+        "LearnOpenGL/PointShadowMapDepthFS.glsl");
+
+    Shader pointerDepthMapShader(vrxShaderPath.c_str(),
+                                 geoShaderPath.c_str(),
+                                     fragShaderPath.c_str());
+
+    vrxShaderPath = FileSystem::getPath("LearnOpenGL/PointShadowVS.glsl");
+    fragShaderPath = FileSystem::getPath("LearnOpenGL/PointShadowFS.glsl");
+
+    Shader pointShadowMapShader(vrxShaderPath.c_str(),
+                                      fragShaderPath.c_str());
+
+
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -198,13 +230,13 @@ int main()
     // configure depth map FBO
     // -----------------------
     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-    unsigned int depthMapFBO;
-    glGenFramebuffers(1, &depthMapFBO);
+    unsigned int directionalDepthMapFBO;
+    glGenFramebuffers(1, &directionalDepthMapFBO);
 
      // create depth texture
-    unsigned int depthMap;
-    glGenTextures(1, &depthMap);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
+    unsigned int directonalDepthMap;
+    glGenTextures(1, &directonalDepthMap);
+    glBindTexture(GL_TEXTURE_2D, directonalDepthMap);
     glTexImage2D(GL_TEXTURE_2D,
                  0,
         // GL_DEPTH_COMPONENT : 오로지 depth 값만 필요하므로
@@ -229,11 +261,11 @@ int main()
 
     // attach depth texture as FBO's depth buffer
     // 새로운 FB 에 depthMap Texture 을 attach 한다.
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, directionalDepthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_DEPTH_ATTACHMENT,
                            GL_TEXTURE_2D,
-                           depthMap,
+                           directonalDepthMap,
                            0);
 
     // color 값은 필요없다. depth 값만 쓰면 된다.
@@ -245,6 +277,42 @@ int main()
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    
+    // configure depth map FBO
+    // -----------------------
+    unsigned int pointDepthMapFBO;
+    glGenFramebuffers(1, &pointDepthMapFBO);
+    // create depth cubemap texture
+    unsigned int pointDepthCubemap;
+    glGenTextures(1, &pointDepthCubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, pointDepthCubemap);
+    for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                     0,
+                     GL_DEPTH_COMPONENT,
+                     SHADOW_WIDTH,
+                     SHADOW_HEIGHT,
+                     0,
+                     GL_DEPTH_COMPONENT,
+                     GL_FLOAT,
+                     NULL);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, pointDepthMapFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER,
+                         GL_DEPTH_ATTACHMENT,
+                         pointDepthCubemap,
+                         0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
     {
         // shader configuration
@@ -258,9 +326,13 @@ int main()
         gammaCorrectionShader.use();
         gammaCorrectionShader.setInt("floorTexture", 0);
 
-        shadowMapShader.use();
-        shadowMapShader.setInt("diffuseTexture", 0);
-        shadowMapShader.setInt("shadowMap", 1);
+        directionalShadowMapShader.use();
+        directionalShadowMapShader.setInt("diffuseTexture", 0);
+        directionalShadowMapShader.setInt("shadowMap", 1);
+
+        pointShadowMapShader.use();
+        pointShadowMapShader.setInt("diffuseTexture", 0);
+        pointShadowMapShader.setInt("depthMap", 1);
     }
 
     // render loop
@@ -285,97 +357,30 @@ int main()
         // 1) Gamma Correction 예시
         // renderGamma(gammaCorrectionShader, floorTexture, floorTextureGmaCorrected);
 
-        glm::mat4 lightProjection, lightView;
         glm::mat4 lightSpaceMatrix;
-        float near_plane = 1.0f, far_plane = 7.5f;
 
-        {
-            // Depth Map 그리기
-            // 1. render depth of scene to texture (from light's perspective)
-
-
-            // 현재 코드는 directional light 관점에서의 depth map 을 만들고 있다.
-            // 이로 인해 모든 light ray 는 같은 방향을 가진다.
-            // 따라서 광원의 projection matrix 는 orthographic 을 사용한다.
-            // 우리가 평소에 원근법을 적용하게 되면,  눈에서 각 물체로
-            // ray cast 를 한다고 가정하면, 각 물체로 가는 ray 의 방향이 모두 다르다
-            // 하지만 orthographic 을 사용하게 되면, 모든 ray 의 방향이 같다고 가정한다.
-            // 이러한 원리를 directional 광원에게도 동일하게 적용한다고 생각하면
-            // 이해할 수 있다.
-            float near_plane = 1.0f, far_plane = 7.5f;
-            lightProjection =
-                glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-            lightView = glm::lookAt(depthMapDirectionalLightPos,
-                                    glm::vec3(0.0f),
-                                    glm::vec3(0.0, 1.0, 0.0));
-
-            // light 공간에서 clip space 로 변환해주는 matrix
-            lightSpaceMatrix = lightProjection * lightView;
-
-            // render scene from light's point of view
-            depthMapShader.use();
-            depthMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-            
-            glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-
-            // depth 값을 기록하는 shader 를 실행하고자 한다.
-            // 그래서 기존에 frame buffer object 에 기록된 depth buffer 값만 비운다.
-            glClear(GL_DEPTH_BUFFER_BIT);
-
-            glActiveTexture(GL_TEXTURE0);
-
-            glBindTexture(GL_TEXTURE_2D, floorTexture);
-
-            renderScene(depthMapShader);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-
-        {
-            // reset viewport
-            // 왜 viewport 를 reset 해야 하는 것일까 ?
-            // 가끔 shader map 의 크기가 실제 우리가 그리는 scene 크기와 다를 수 있다
-            // 그래서 shadow map 과 실제 scene 을 그리기 전에 각각의 크기에 맞게
-            // viewport 를 조정해줘야 한다.
-            glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-            shadowMapShader.use();
-            glm::mat4 projection =
-                glm::perspective(glm::radians(camera.Zoom),
-                                 (float)SCR_WIDTH / (float)SCR_HEIGHT,
-                                 0.1f,
-                                 100.0f);
-            glm::mat4 view = camera.GetViewMatrix();
-            shadowMapShader.setMat4("projection", projection);
-            shadowMapShader.setMat4("view", view);
-            // set light uniforms
-            shadowMapShader.setVec3f("viewPos", camera.Position);
-            shadowMapShader.setVec3f("lightPos", depthMapDirectionalLightPos);
-            shadowMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, floorTexture);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, depthMap);
-
-            glCullFace(GL_FRONT);
-            renderScene(shadowMapShader);
-            glCullFace(GL_BACK); // don’t forget to reset original culling face
-        }
-
-        {
-
-            // render Depth map to quad for visual debugging
-            // ---------------------------------------------
-            simpleDebugShader.use();
-            simpleDebugShader.setFloat("near_plane", near_plane);
-            simpleDebugShader.setFloat("far_plane", far_plane);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, depthMap);
-        }
+            renderDirectionalLightDepthMap(directionalDepthMapShader,
+                                           directionalDepthMapFBO,
+                                           SHADOW_WIDTH,
+                                           SHADOW_HEIGHT,
+                                           floorTexture,
+                                       lightSpaceMatrix);
+            renderDirectionalShadow(directionalShadowMapShader,
+            									SHADOW_WIDTH,
+            									SHADOW_HEIGHT,
+            									floorTexture,
+            									directonalDepthMap,
+            									lightSpaceMatrix);
+        // {
+        // 
+        //     // render Depth map to quad for visual debugging
+        //     // ---------------------------------------------
+        //     simpleDebugShader.use();
+        //     simpleDebugShader.setFloat("near_plane", near_plane);
+        //     simpleDebugShader.setFloat("far_plane", far_plane);
+        //     glActiveTexture(GL_TEXTURE0);
+        //     glBindTexture(GL_TEXTURE_2D, directonalDepthMap);
+        // }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -615,6 +620,100 @@ void renderScene(const Shader &shader)
     shader.setMat4("model", model);
     renderCube();
 }
+
+void renderDirectionalLightDepthMap(Shader &directionalDepthMapShader,
+                                    unsigned int directionalDepthMapFBO,
+                                    int SHADOW_WIDTH,
+                                    int SHADOW_HEIGHT,
+                                    unsigned int floorTexture,
+                                    glm::mat4 &lightSpaceMatrix)
+{
+    // Depth Map 그리기
+    // 1. render depth of scene to texture (from light's perspective)
+
+
+    // 현재 코드는 directional light 관점에서의 depth map 을 만들고 있다.
+    // 이로 인해 모든 light ray 는 같은 방향을 가진다.
+    // 따라서 광원의 projection matrix 는 orthographic 을 사용한다.
+    // 우리가 평소에 원근법을 적용하게 되면,  눈에서 각 물체로
+    // ray cast 를 한다고 가정하면, 각 물체로 가는 ray 의 방향이 모두 다르다
+    // 하지만 orthographic 을 사용하게 되면, 모든 ray 의 방향이 같다고 가정한다.
+    // 이러한 원리를 directional 광원에게도 동일하게 적용한다고 생각하면
+    // 이해할 수 있다.
+
+    glm::mat4 lightProjection, lightView;
+    float near_plane = 1.0f, far_plane = 7.5f;
+    lightProjection =
+        glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+    lightView = glm::lookAt(depthMapDirectionalLightPos,
+                            glm::vec3(0.0f),
+                            glm::vec3(0.0, 1.0, 0.0));
+
+    // light 공간에서 clip space 로 변환해주는 matrix
+    lightSpaceMatrix = lightProjection * lightView;
+
+    // render scene from light's point of view
+    directionalDepthMapShader.use();
+    directionalDepthMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, directionalDepthMapFBO);
+
+    // depth 값을 기록하는 shader 를 실행하고자 한다.
+    // 그래서 기존에 frame buffer object 에 기록된 depth buffer 값만 비운다.
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glActiveTexture(GL_TEXTURE0);
+
+    glBindTexture(GL_TEXTURE_2D, floorTexture);
+
+    renderScene(directionalDepthMapShader);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void renderDirectionalShadow(Shader &directionalShadowMapShader,
+    int SHADOW_WIDTH,
+    int SHADOW_HEIGHT,
+    unsigned int floorTexture,
+                             unsigned int directonalDepthMap,
+     glm::mat4 &lightSpaceMatrix)
+{
+    // reset viewport
+    // 왜 viewport 를 reset 해야 하는 것일까 ?
+    // 가끔 shader map 의 크기가 실제 우리가 그리는 scene 크기와 다를 수 있다
+    // 그래서 shadow map 과 실제 scene 을 그리기 전에 각각의 크기에 맞게
+    // viewport 를 조정해줘야 한다.
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+    directionalShadowMapShader.use();
+    glm::mat4 projection =
+        glm::perspective(glm::radians(camera.Zoom),
+                         (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                         0.1f,
+                         100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    directionalShadowMapShader.setMat4("projection", projection);
+    directionalShadowMapShader.setMat4("view", view);
+    // set light uniforms
+    directionalShadowMapShader.setVec3f("viewPos", camera.Position);
+    directionalShadowMapShader.setVec3f("lightPos",
+                                        depthMapDirectionalLightPos);
+    directionalShadowMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, floorTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, directonalDepthMap);
+
+    glCullFace(GL_FRONT);
+    renderScene(directionalShadowMapShader);
+    glCullFace(GL_BACK); // don’t forget to reset original culling face
+}
+
+
 
 
 // renderCube() renders a 1x1 3D cube in NDC.
