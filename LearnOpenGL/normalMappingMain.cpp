@@ -139,7 +139,7 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(
             model,
-            glm::radians((float)glfwGetTime() * -10.0f),
+            glm::radians((float)glfwGetTime() * 3 * -10.0f),
             glm::normalize(glm::vec3(
                 1.0,
                 0.0,
