@@ -83,9 +83,9 @@ int main()
     // build and compile shaders
     // -------------------------
     std::string vrxShaderPath =
-        FileSystem::getPath("LearnOpenGL/SteepParallaxMappingVS.glsl");
+        FileSystem::getPath("LearnOpenGL/ParallaxOcculusionMappingVS.glsl");
     std::string fragShaderPath =
-        FileSystem::getPath("LearnOpenGL/SteepParallaxMappingPS.glsl");
+        FileSystem::getPath("LearnOpenGL/ParallaxOcculusionMappingPS.glsl");
     
     Shader shader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
