@@ -9,47 +9,55 @@ in VS_OUT {
     vec3 TangentFragPos;
 } fs_in;
 
-// diffuseMap, normalMap, depthMap을 입력으로 받습니다
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D depthMap;
 
-// Parallax 효과의 강도를 조절하는 데 사용
 uniform float heightScale;
 
-// viewDir : tangent space 에서 view -> frag 방향 벡터
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
-	// 깊이 map 의 값을 가져온다
-	// 값 low  : 깊이가 깊다 == 높이가 높다
-	// 값 high : 깊이가 낮다 == 높이가 낮다
-    float height =  texture(depthMap, texCoords).r;     
-    
-	// 1) viewDir.xy 를 viewDir.z 로 나눈다 : 원근에 따른 보정
-	// - 카메라 시점에서 보았을 때 텍스처 좌표가 이동해야 하는지의 방향
-	// 2) 이후 H(A) 값을 곱한다
-	// - 해당 방향으로 얼마나 이동해야 하는가
-	// 3) 마지막으로 설정한 height_scale 값도 곱해준다 : 이것을 해주지 않으면
-	//    일반적으로 조정효과가 너무 크다
-	// p : 변위 벡터
-    vec2 p = viewDir.xy / viewDir.z * (height * heightScale);     
+    // number of depth layers
+    const float minLayers = 8;
+    const float maxLayers = 32;
 
-    // 조정된 tex coord 값을 리턴한다
-	// 해당 값을 이용하여 normal map, diffuse map 에서 값을 추출할 것이다
-	return texCoords - p;
+    // 바라보는 방향에 따라 Layer 조정하기
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
+    
+    // calculate the size of each layer
+    float layerDepth = 1.0 / numLayers;
+    
+    // depth of current layer
+    float currentLayerDepth = 0.0;
+    
+    // the amount to shift the texture coordinates per layer (from vector P)
+    vec2 P = viewDir.xy / viewDir.z * heightScale; 
+    vec2 deltaTexCoords = P / numLayers;
+  
+    // get initial values
+    vec2  currentTexCoords     = texCoords;
+    float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+      
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        // shift texture coordinates along direction of P
+        currentTexCoords -= deltaTexCoords;
+        // get depthmap value at current texture coordinates
+        currentDepthMapValue = texture(depthMap, currentTexCoords).r;  
+        // get depth of next layer
+        currentLayerDepth += layerDepth;  
+    }
+    
+    return currentTexCoords;
 }
 
 void main()
 {           
-	// tangent space view dir 벡터를 구한다
     // offset texture coordinates with Parallax Mapping
     vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
     vec2 texCoords = fs_in.TexCoords;
     
-	// Parallax Mapping 을 통해 조정된 tex coord
-    texCoords = ParallaxMapping(fs_in.TexCoords,  viewDir); 
-    
-    // Border Artifact 방지
+    texCoords = ParallaxMapping(fs_in.TexCoords,  viewDir);       
     if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
         discard;
 

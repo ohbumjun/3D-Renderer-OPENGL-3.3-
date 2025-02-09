@@ -82,16 +82,21 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader shader("5.1.parallax_mapping.vs", "5.1.parallax_mapping.fs");
+    std::string vrxShaderPath =
+        FileSystem::getPath("LearnOpenGL/SteepParallaxMappingVS.glsl");
+    std::string fragShaderPath =
+        FileSystem::getPath("LearnOpenGL/SteepParallaxMappingPS.glsl");
+    
+    Shader shader(vrxShaderPath.c_str(), fragShaderPath.c_str());
 
     // load textures
     // -------------
     unsigned int diffuseMap = loadTexture(
-        FileSystem::getPath("resources/textures/bricks2.jpg").c_str());
+            FileSystem::getPath("BJResource/bricks2.jpg").c_str());
     unsigned int normalMap = loadTexture(
-        FileSystem::getPath("resources/textures/bricks2_normal.jpg").c_str());
+            FileSystem::getPath("BJResource/bricks2_normal.jpg").c_str());
     unsigned int heightMap = loadTexture(
-        FileSystem::getPath("resources/textures/bricks2_disp.jpg").c_str());
+            FileSystem::getPath("BJResource/bricks2_disp.jpg").c_str());
     /* unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/toy_box_diffuse.png").c_str());
     unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/toy_box_normal.png").c_str());
     unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/toy_box_disp.png").c_str());*/
@@ -146,8 +151,8 @@ int main()
                 0.0,
                 1.0))); // rotate the quad to show parallax mapping from multiple directions
         shader.setMat4("model", model);
-        shader.setVec3("viewPos", camera.Position);
-        shader.setVec3("lightPos", lightPos);
+        shader.setVec3f("viewPos", camera.Position);
+        shader.setVec3f("lightPos", lightPos);
         shader.setFloat("heightScale", heightScale); // adjust with Q and E keys
         std::cout << heightScale << std::endl;
         glActiveTexture(GL_TEXTURE0);
